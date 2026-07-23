@@ -27,6 +27,188 @@ const serviceData = {
     procedures: ['Skin Examination', 'Biopsy', 'Laser Treatment', 'Acne Therapy'],
     availability: 'Monday – Friday',
   },
+  neurology: {
+  title: "Neurology",
+  Icon: Stethoscope,
+  tone: "bg-indigo-50 text-indigo-600",
+  description: "Advanced brain and nervous system care",
+  longDescription:
+    "Our neurology department diagnoses and treats disorders affecting the brain, spinal cord, and nervous system using advanced medical technology.",
+  doctors: [
+    "Dr. Mahendra Gupta",
+    "Dr. Anil Sharma"
+  ],
+  procedures: [
+    "Stroke Care",
+    "EEG",
+    "Brain MRI",
+    "Epilepsy Treatment"
+  ],
+  availability: "Sunday – Friday",
+},
+pediatrics: {
+  title: "Pediatrics",
+  Icon: Heart,
+  tone: "bg-sky-50 text-sky-600",
+  description: "Complete healthcare for children",
+  longDescription:
+    "Our pediatricians provide preventive, diagnostic, and treatment services for infants, children, and adolescents.",
+  doctors: [
+    "Dr. Manisha Thapa",
+    "Dr. Riya Shah"
+  ],
+  procedures: [
+    "Vaccinations",
+    "Growth Monitoring",
+    "Child Consultation",
+    "Pediatric Surgery"
+  ],
+  availability: "Everyday",
+},
+orthopedics: {
+  title: "Orthopedics",
+  Icon: Stethoscope,
+  tone: "bg-orange-50 text-orange-600",
+  description: "Bone and joint care",
+  longDescription:
+    "Our orthopedic specialists diagnose and treat fractures, arthritis, sports injuries, and musculoskeletal disorders.",
+  doctors: [
+    "Dr. Suresh KC"
+  ],
+  procedures: [
+    "Fracture Treatment",
+    "Joint Replacement",
+    "Sports Medicine",
+    "Physical Therapy"
+  ],
+  availability: "Monday – Saturday",
+},
+gynecology: {
+  title: "Gynecology",
+  Icon: Heart,
+  tone: "bg-pink-50 text-pink-600",
+  description: "Women's healthcare",
+  longDescription:
+    "Comprehensive women's healthcare services including reproductive health, pregnancy care, and menopause management.",
+  doctors: [
+    "Dr. Priya Sharma"
+  ],
+  procedures: [
+    "Pregnancy Care",
+    "Annual Exams",
+    "Ultrasound",
+    "Gynecologic Surgery"
+  ],
+  availability: "Monday – Friday",
+},
+ophthalmology: {
+  title: "Ophthalmology",
+  Icon: Sparkles,
+  tone: "bg-cyan-50 text-cyan-600",
+  description: "Complete eye care",
+  longDescription:
+    "Our ophthalmologists provide diagnosis, treatment, and surgery for all types of eye diseases.",
+  doctors: [
+    "Dr. Ashok Rai"
+  ],
+  procedures: [
+    "Eye Examination",
+    "LASIK",
+    "Cataract Surgery",
+    "Glaucoma Treatment"
+  ],
+  availability: "Sunday – Friday",
+},
+ent: {
+  title: "ENT",
+  Icon: Stethoscope,
+  tone: "bg-emerald-50 text-emerald-600",
+  description: "Ear, Nose & Throat care",
+  longDescription:
+    "Expert diagnosis and treatment for ear, nose, throat, sinus, and hearing disorders.",
+  doctors: [
+    "Dr. Prakash Karki"
+  ],
+  procedures: [
+    "Hearing Tests",
+    "Sinus Surgery",
+    "Tonsillectomy",
+    "Balance Disorders"
+  ],
+  availability: "Monday – Saturday",
+},
+psychiatry: {
+  title: "Psychiatry",
+  Icon: Heart,
+  tone: "bg-violet-50 text-violet-600",
+  description: "Mental health services",
+  longDescription:
+    "Our psychiatrists provide compassionate treatment for anxiety, depression, stress, and other mental health conditions.",
+  doctors: [
+    "Dr. Nabin Shrestha"
+  ],
+  procedures: [
+    "Mental Evaluation",
+    "Therapy",
+    "Medication Management",
+    "Counseling"
+  ],
+  availability: "Sunday – Friday",
+},
+dentistry: {
+  title: "Dentistry",
+  Icon: Sparkles,
+  tone: "bg-teal-50 text-teal-600",
+  description: "Complete dental care",
+  longDescription:
+    "Preventive, restorative, cosmetic, and orthodontic dental treatments using modern equipment.",
+  doctors: [
+    "Dr. Roshan Adhikari"
+  ],
+  procedures: [
+    "Dental Cleaning",
+    "Fillings",
+    "Root Canal",
+    "Orthodontics"
+  ],
+  availability: "Monday – Saturday",
+},
+pharmacy: {
+  title: "Pharmacy",
+  Icon: Check,
+  tone: "bg-green-50 text-green-600",
+  description: "Prescription & medication services",
+  longDescription:
+    "Our pharmacy offers prescription fulfillment, medication counseling, and healthcare products.",
+  doctors: [
+    "Licensed Pharmacists"
+  ],
+  procedures: [
+    "Prescription Refill",
+    "Medication Counseling",
+    "Home Delivery",
+    "Health Products"
+  ],
+  availability: "24 Hours",
+},
+emergency: {
+  title: "Emergency Care",
+  Icon: Heart,
+  tone: "bg-red-50 text-red-600",
+  description: "24/7 Emergency Medical Services",
+  longDescription:
+    "Immediate emergency medical treatment with highly trained physicians, nurses, ambulances, and advanced life support.",
+  doctors: [
+    "Emergency Response Team"
+  ],
+  procedures: [
+    "Trauma Care",
+    "Emergency Surgery",
+    "Critical Care",
+    "Ambulance Service"
+  ],
+  availability: "24/7",
+},
 };
 
 const ServiceDetail = () => {
