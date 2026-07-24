@@ -50,7 +50,7 @@ const Contact = () => {
             )}
 
             <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-              <Input label="Your Name" placeholder="John Doe" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+              <Input label="Your Name" placeholder="Ram Shrestha" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
               <Input label="Email Address" type="email" placeholder="john@example.com" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
               <Input label="Subject" placeholder="How can we help?" value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} required />
               <div>
