@@ -4,7 +4,7 @@ import dotenv from "dotenv"
 const app = express();
 
 app.get("/",(req,res)=>{
-    res.send("Welcome to Server")
+    res.send("Welcome to Server").status(200),json({message:"appointment created"})
 })
 
 
@@ -49,7 +49,7 @@ app.get("/appointments/:id/:name",(req,res)=>{
     res.json(req.params)
 })
 
-//query parameter (used in filterization)
+//query parameter (used in pagination)
 app.get("/doctors",(req,res)=>{
     res.json(req.query)
 })

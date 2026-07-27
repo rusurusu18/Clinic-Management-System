@@ -1,5 +1,3 @@
-response object(res)
-
 
 //Routing
 Routing is the process of how the application responds the client request throught a specific url or http like /about, /services 
@@ -46,3 +44,22 @@ app.get("/appointments/:id/:name",(req,res)=>{
 app.get("/doctors",(req,res)=>{
     res.json(req.query)
 })
+
+* response object(res)
+=> it contains all the information send by the client 
+
+//make route for all 
+- req.body
+- req.params: route parameters
+- req.query query parameters
+- req.headers
+- req.method
+- req.url
+
+* res(Response object)
+=> It is used to send back data to the client 
+- res.send() send text or html
+- res.json() send JSON
+- res.status() send http status code 
+- res.redirect() 
+
