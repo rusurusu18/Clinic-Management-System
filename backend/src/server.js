@@ -3,8 +3,11 @@ import dotenv from "dotenv"
 
 const app = express();
 
+app.use(express.json());
+
+
 app.get("/",(req,res)=>{
-    res.send("Welcome to Server").status(200),json({message:"appointment created"})
+    res.status(200).send("Welcome to Server")
 })
 
 
@@ -28,13 +31,13 @@ app.post("/create",(req,res)=>{
 
 
 //PUT
-app.put("/appointments/:ID",(req,res)=>{
+app.put("/appointments/:id",(req,res)=>{
     res.send("appointment is completed")
 })
 
 
 //For Delete
-app.delete("/appointments/:ID",(req,res)=>{
+app.delete("/appointments/:id",(req,res)=>{
     res.send("Appointments deleted")
 })
 
@@ -53,6 +56,90 @@ app.get("/appointments/:id/:name",(req,res)=>{
 app.get("/doctors",(req,res)=>{
     res.json(req.query)
 })
+
+
+//Assignment
+// req.body
+app.post("/users", (req, res) => {
+    console.log(req.body);
+
+    res.json({
+        message: "User created",
+        data: req.body
+    });
+});
+
+
+// req.params (route parameters)
+app.get("/users/:id", (req, res) => {
+    res.json({
+        id: req.params.id
+    });
+});
+
+
+// Multiple route parameters
+// Example: /appointment/10/Ram
+app.get("/appointment/:id/:name", (req, res) => {
+    res.json(req.params);
+});
+
+
+// req.query (query parameters)
+app.get("/patients", (req, res) => {
+    res.json(req.query);
+});
+
+
+// req.headers
+app.get("/headers", (req, res) => {
+    res.json(req.headers);
+});
+
+
+// req.method
+app.get("/method", (req, res) => {
+    res.json({
+        method: req.method
+    });
+});
+
+
+// req.url
+app.get("/url", (req, res) => {
+    res.json({
+        url: req.url
+    });
+});
+
+
+// res.send()
+app.get("/send", (req, res) => {
+    res.send("Sending text response");
+});
+
+
+// res.json()
+app.get("/json", (req, res) => {
+    res.json({
+        message: "Sending JSON response"
+    });
+});
+
+
+// res.status()
+app.get("/status", (req, res) => {
+    res.status(201).json({
+        message: "Created successfully"
+    });
+});
+
+
+// res.redirect()
+app.get("/old-page", (req, res) => {
+    res.redirect("/new-page");
+});
+
 
 const PORT=process.env.PORT || 3000;
 
