@@ -148,7 +148,7 @@ const router = createBrowserRouter([
               >
                 Sign in
               </button>
-              <p className="text-center text-xs text-slate-400">Demo mode — any credentials will sign you in.</p>
+              <p className="text-center text-xs text-slate-400 dark:text-slate-500">Demo mode — any credentials will sign you in.</p>
             </div>
           </RouteWrapper>
         ),

@@ -3,6 +3,9 @@
    ============================================ */
 @import "tailwindcss";
 
+/* Connect Tailwind's dark: variant to the data-theme attribute */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 /* ============================================
    DESIGN TOKENS
    ============================================ */

@@ -142,7 +142,7 @@ const Navbar = () => {
                         onMouseLeave={() => setIsServicesDropdownOpen(false)}
                       >
                         <div className="border-b border-slate-100 px-4 py-2.5 dark:border-slate-800">
-                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">All Specialties</p>
+                          <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">All Specialties</p>
                         </div>
                         <div className="max-h-96 overflow-y-auto p-1.5">
                           {services.map((service) => (
@@ -157,9 +157,9 @@ const Navbar = () => {
                               </span>
                               <div className="min-w-0 flex-1">
                                 <p className="text-sm font-semibold text-slate-900 dark:text-white">{service.label}</p>
-                                <p className="truncate text-xs text-slate-500">{service.description}</p>
+                                <p className="truncate text-xs text-slate-500 dark:text-slate-400">{service.description}</p>
                               </div>
-                              <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-primary-600" />
+                              <ArrowRight className="h-4 w-4 shrink-0 text-slate-300 transition-transform group-hover:translate-x-0.5 group-hover:text-primary-600 dark:text-slate-600" />
                             </Link>
                           ))}
                         </div>
@@ -266,7 +266,7 @@ const Navbar = () => {
               })}
 
               <div className="rounded-xl bg-slate-50/80 px-4 py-3 dark:bg-slate-900/50">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Popular services</p>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">Popular services</p>
                 <div className="grid grid-cols-2 gap-1.5">
                   {services.slice(0, 8).map((service) => (
                     <Link
