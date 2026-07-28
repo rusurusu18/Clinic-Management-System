@@ -22,7 +22,7 @@ const AuthLayout = () => {
         <div className="rounded-3xl border border-white/15 bg-white/95 p-8 shadow-2xl backdrop-blur-xl dark:bg-slate-900/95">
           <div className="mb-6 text-center">
             <h1 className="font-display text-2xl font-bold text-slate-900 dark:text-white">Welcome back</h1>
-            <p className="mt-1.5 text-sm text-slate-500">Please sign in to access your account.</p>
+            <p className="mt-1.5 text-sm text-slate-500 dark:text-slate-400">Please sign in to access your account.</p>
           </div>
           <Outlet />
         </div>

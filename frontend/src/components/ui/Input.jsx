@@ -21,14 +21,14 @@ const Input = forwardRef(({
   return (
     <div className="w-full">
       {label && (
-        <label className="mb-1.5 block text-sm font-medium text-gray-700">
+        <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
           {required && <span className="ml-1 text-danger">*</span>}
         </label>
       )}
       <div className="relative">
         {icon && iconPosition === 'left' && (
-          <span className="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 items-center text-gray-400">
+          <span className="pointer-events-none absolute left-3 top-1/2 flex -translate-y-1/2 items-center text-gray-400 dark:text-gray-500">
             {icon}
           </span>
         )}
@@ -49,7 +49,7 @@ const Input = forwardRef(({
         )}
       </div>
       {helperText && (
-        <p className={`mt-1 text-sm ${error ? 'text-danger' : 'text-gray-500'}`}>
+        <p className={`mt-1 text-sm ${error ? 'text-danger' : 'text-gray-500 dark:text-gray-400'}`}>
           {helperText}
         </p>
       )}
