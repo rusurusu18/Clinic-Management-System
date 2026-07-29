@@ -1,5 +1,6 @@
 import express from "express"
 import dotenv from "dotenv"
+import { studentRoutes } from "./routes/studentRoutes";
 
 const app = express();
 
@@ -146,3 +147,7 @@ const PORT=process.env.PORT || 3000;
 app.listen(PORT,()=>{
     console.log('our server is running')
 })
+
+
+
+app.use("/api",studentRoutes)

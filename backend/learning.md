@@ -1,4 +1,4 @@
-****************Routing*********************
+****************( Routing )*********************
 Routing is the process of how the application responds the client request throught a specific url or http like /about, /services 
 
 =>Different route method 
@@ -44,7 +44,7 @@ app.get("/doctors",(req,res)=>{
     res.json(req.query)
 })
 
-*****************response object(res)*********************
+*****************( response object(res) )*********************
 => it contains all the information send by the client 
 
 //make route for all 
@@ -62,7 +62,7 @@ app.get("/doctors",(req,res)=>{
 - res.status() send http status code 
 - res.redirect() 
 
-*****************RestAPI**************************
+*****************( RestAPI )**************************
 => Representational state transfer 
 It is a set of rules(an architectural style) for designing APIs
 
@@ -98,7 +98,7 @@ frontend
 - Standard url structure 
 
 
-**************HTTP status code************************
+**************( HTTP status code )************************
 => An http status code is a 3-digit number returned by the server to tell the client whether the request succeeded or failed.
 
 Status code categories 
@@ -131,5 +131,6 @@ res.status(400).json({
 8. 500 => internal server error (db failure , code error)
 
 
-****************Controller(Business logic)********************
+****************{ Controller(Business logic) }********************
+
 
