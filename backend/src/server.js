@@ -1,153 +1,169 @@
-import express from "express"
-import dotenv from "dotenv"
-import { studentRoutes } from "./routes/studentRoutes";
+// import express from "express"
+// import dotenv from "dotenv"
+// import { studentRoutes } from "./routes/studentRoutes";
 
-const app = express();
+// const app = express();
 
-app.use(express.json());
-
-
-app.get("/",(req,res)=>{
-    res.status(200).send("Welcome to Server")
-})
+// app.use(express.json());
 
 
-app.get("/about",(req,res)=>{
-    res.send("Welcome to about us page")
-})
-
-app.get("/employee",(req,res)=>{
-    res.json({
-        id:1,
-        name:"Ram",
-        Role: "Full-Stack Developer",
-        Salary: "80000"
-    })
-})
-
-//data post garnu xa vane (POST)
-app.post("/create",(req,res)=>{
-    res.send("Post create vayo")
-})
+// app.get("/",(req,res)=>{
+//     res.status(200).send("Welcome to Server")
+// })
 
 
-//PUT
-app.put("/appointments/:id",(req,res)=>{
-    res.send("appointment is completed")
-})
+// app.get("/about",(req,res)=>{
+//     res.send("Welcome to about us page")
+// })
+
+// app.get("/employee",(req,res)=>{
+//     res.json({
+//         id:1,
+//         name:"Ram",
+//         Role: "Full-Stack Developer",
+//         Salary: "80000"
+//     })
+// })
+
+// //data post garnu xa vane (POST)
+// app.post("/create",(req,res)=>{
+//     res.send("Post create vayo")
+// })
 
 
-//For Delete
-app.delete("/appointments/:id",(req,res)=>{
-    res.send("Appointments deleted")
-})
-
-//to access single value 
-app.get("/doctors/:id",(req,res)=>{ 
-    res.send(req.params.id)
-})
+// //PUT
+// app.put("/appointments/:id",(req,res)=>{
+//     res.send("appointment is completed")
+// })
 
 
-//multiple parameters (/student/id/rushu)
-app.get("/appointments/:id/:name",(req,res)=>{ 
-    res.json(req.params)
-})
+// //For Delete
+// app.delete("/appointments/:id",(req,res)=>{
+//     res.send("Appointments deleted")
+// })
 
-//query parameter (used in pagination)
-app.get("/doctors",(req,res)=>{
-    res.json(req.query)
-})
-
-
-//Assignment
-// req.body
-app.post("/users", (req, res) => {
-    console.log(req.body);
-
-    res.json({
-        message: "User created",
-        data: req.body
-    });
-});
+// //to access single value 
+// app.get("/doctors/:id",(req,res)=>{ 
+//     res.send(req.params.id)
+// })
 
 
-// req.params (route parameters)
-app.get("/users/:id", (req, res) => {
-    res.json({
-        id: req.params.id
-    });
-});
+// //multiple parameters (/student/id/rushu)
+// app.get("/appointments/:id/:name",(req,res)=>{ 
+//     res.json(req.params)
+// })
+
+// //query parameter (used in pagination)
+// app.get("/doctors",(req,res)=>{
+//     res.json(req.query)
+// })
 
 
-// Multiple route parameters
-// Example: /appointment/10/Ram
-app.get("/appointment/:id/:name", (req, res) => {
-    res.json(req.params);
-});
+// //Assignment
+// // req.body
+// app.post("/users", (req, res) => {
+//     console.log(req.body);
+
+//     res.json({
+//         message: "User created",
+//         data: req.body
+//     });
+// });
 
 
-// req.query (query parameters)
-app.get("/patients", (req, res) => {
-    res.json(req.query);
-});
+// // req.params (route parameters)
+// app.get("/users/:id", (req, res) => {
+//     res.json({
+//         id: req.params.id
+//     });
+// });
 
 
-// req.headers
-app.get("/headers", (req, res) => {
-    res.json(req.headers);
-});
+// // Multiple route parameters
+// // Example: /appointment/10/Ram
+// app.get("/appointment/:id/:name", (req, res) => {
+//     res.json(req.params);
+// });
 
 
-// req.method
-app.get("/method", (req, res) => {
-    res.json({
-        method: req.method
-    });
-});
+// // req.query (query parameters)
+// app.get("/patients", (req, res) => {
+//     res.json(req.query);
+// });
 
 
-// req.url
-app.get("/url", (req, res) => {
-    res.json({
-        url: req.url
-    });
-});
+// // req.headers
+// app.get("/headers", (req, res) => {
+//     res.json(req.headers);
+// });
 
 
-// res.send()
-app.get("/send", (req, res) => {
-    res.send("Sending text response");
-});
+// // req.method
+// app.get("/method", (req, res) => {
+//     res.json({
+//         method: req.method
+//     });
+// });
 
 
-// res.json()
-app.get("/json", (req, res) => {
-    res.json({
-        message: "Sending JSON response"
-    });
-});
+// // req.url
+// app.get("/url", (req, res) => {
+//     res.json({
+//         url: req.url
+//     });
+// });
 
 
-// res.status()
-app.get("/status", (req, res) => {
-    res.status(201).json({
-        message: "Created successfully"
-    });
-});
+// // res.send()
+// app.get("/send", (req, res) => {
+//     res.send("Sending text response");
+// });
 
 
-// res.redirect()
-app.get("/old-page", (req, res) => {
-    res.redirect("/new-page");
-});
+// // res.json()
+// app.get("/json", (req, res) => {
+//     res.json({
+//         message: "Sending JSON response"
+//     });
+// });
 
 
-const PORT=process.env.PORT || 3000;
+// // res.status()
+// app.get("/status", (req, res) => {
+//     res.status(201).json({
+//         message: "Created successfully"
+//     });
+// });
 
-app.listen(PORT,()=>{
-    console.log('our server is running')
-})
+
+// // res.redirect()
+// app.get("/old-page", (req, res) => {
+//     res.redirect("/new-page");
+// });
+
+
+// const PORT=process.env.PORT || 3000;
+
+// app.listen(PORT,()=>{
+//     console.log('our server is running')
+// })
 
 
 
-app.use("/api",studentRoutes)
+// app.use("/api",studentRoutes)
+
+
+
+//Without error handling 
+const num= undefined;
+console.log(num.name)  //typeerror cannot read name property
+
+//with error handling
+try{
+//logic 
+const num = undefined;
+console.log(num.name)
+}
+catch(error){
+    console.log(error.message)
+}

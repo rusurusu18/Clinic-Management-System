@@ -132,5 +132,29 @@ res.status(400).json({
 
 
 ****************{ Controller(Business logic) }********************
+a controoller is a server function that receives an http request, processes it and send an http response back to the client 
 
 
+***********************(Error Handling)*********************
+
+=> types of the error 
+1. syntax error 
+wrong javascript syntax
+- example:
+const user = {
+    name:"Rushu
+- output => Syntax Error
+
+2. Runtime Error
+It occurs while the application is running. 
+- example:
+const num= undefined;
+console.log(num.name)
+- output => Syntax Error & Type Error
+
+3. Logical Error
+Program runs but gives wrong result 
+- example:
+const total = 10-30
+console.log(total);
+- output => -20 but logically not correct 
