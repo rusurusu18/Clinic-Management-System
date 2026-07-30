@@ -167,3 +167,20 @@ console.log(num.name)
 catch(error){
     console.log(error.message)
 }
+
+
+//express with catch try and catch 
+app.get("/students",(req,res)=>{
+    try{
+        throw new Error("undefined name") //custom error 
+const student = undefined
+res.json(student.name);
+    }
+    catch(error){
+        res.status(500).json({
+               success:false,
+               message:error.message
+        })
+    }
+})
+
