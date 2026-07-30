@@ -158,3 +158,4 @@ Program runs but gives wrong result
 const total = 10-30
 console.log(total);
 - output => -20 but logically not correct 
+
