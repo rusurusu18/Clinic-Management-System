@@ -1,13 +1,24 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
+// Get a free hosted mysql database in seconds: `npx create-db`
 
+//this tells prisma to create/generate javascript client
 generator client {
-  provider = "prisma-client.js"
+  provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
+  //url = env("Database_URL")
+}
+
+//a model becomes a database table 
+model User{
+  id Int @id @default(autoincrement())
+  name String 
+  age Int
+  address String
+  email String @unique
 }

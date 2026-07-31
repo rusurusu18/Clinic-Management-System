@@ -185,3 +185,24 @@ const user = prisma.user.findunique({
 1. npm install prisma --save-dev
 2. npm install @prisma/client
 3. npx prisma init 
+
+-----------(Schema)--------------
+It is the blueprint of our database.
+
+SQL         Prisma
+Int         Int
+VARCHAR     String
+BOOLEAN     Boolean
+FLOAT       Float
+DATETIME    DateTime
+
+schema.prisma ---> model --migration---mysql table 
+
+To migrate --> npx prisma migrate dev --name initializedschema
+npx prisma generate
+
+- npx prisma studio (to edit without mysql)=> opens GUI
+
+- npx prisma db push (creates migration file)
+
+- npx db push (just changes the schema only updates deoes not create new file)
