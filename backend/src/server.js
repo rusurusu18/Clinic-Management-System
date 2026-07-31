@@ -155,32 +155,85 @@
 
 
 //Without error handling 
-const num= undefined;
-console.log(num.name)  //typeerror cannot read name property
+// const num= undefined;
+// console.log(num.name)  //typeerror cannot read name property
 
-//with error handling
-try{
-//logic 
-const num = undefined;
-console.log(num.name)
-}
-catch(error){
-    console.log(error.message)
-}
+// //with error handling
+// try{
+// //logic 
+// const num = undefined;
+// console.log(num.name)
+// }
+// catch(error){
+//     console.log(error.message)
+// }
 
 
-//express with catch try and catch 
-app.get("/students",(req,res)=>{
-    try{
-        throw new Error("undefined name") //custom error 
-const student = undefined
-res.json(student.name);
-    }
-    catch(error){
-        res.status(500).json({
-               success:false,
-               message:error.message
-        })
-    }
+// //express with catch try and catch 
+// app.get("/students",(req,res)=>{
+//     try{
+//         throw new Error("undefined name") //custom error 
+// const student = undefined
+// res.json(student.name);
+//     }
+//     catch(error){
+//         res.status(500).json({
+//                success:false,
+//                message:error.message
+//         })
+//     }
+// })
+
+
+//-------------------Create CRUD operations---------------------//
+
+//create students 
+app.post("/students",(req,res)=>{
+    db.query(
+        "INSERT INTO students(name, email, age) VALUES (?,?,?)",
+        [
+            req.body.name,
+            req.body.email,
+            req.body.age
+        ]
+    )
+    res.status(200).json({
+        messsage:"Student Created"
+    })
 })
 
+
+//get students 
+app.get("/students",(req,res)=>{
+    const [students] = db.query(
+        "SELECT * FROM students"
+    )
+    res.json(students)
+})
+
+//Update 
+app.put("/students/:id",(req,res)=>{
+    db.query(
+        "UPDATE students SET name=? WHERE id=? ",
+        [
+            req.body.name,
+            req.params.id
+        ]
+    )
+})
+
+//delete
+app.delete("/students/:id",(req,res)=>{
+    db.query(
+        "DEETE FROM students WHERE id=?",
+        [
+            req.params.id
+        ]
+    )
+})
+
+const PORT=process.env.PORT || 3000;
+
+app.listen(PORT,()=>{
+    console.log('our server is running')
+})
