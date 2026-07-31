@@ -159,3 +159,29 @@ const total = 10-30
 console.log(total);
 - output => -20 but logically not correct 
 
+
+---------------------( ORM )--------------------------------
+Object relational mapping 
+=> It is a technique that lets us to interact with a database using our programming language instead of written raw sql queries
+
+--------------------------( PRISMA )-------------------------
+act as translater 
+
+const user = prisma.user.findunique({
+    where:{
+        1
+    }
+})
+
+* Advantage of using prisma
+- Cleaner code
+- auto-compilation 
+- type safe
+- fewer bugs
+- less sql writing 
+- auto migration 
+
+* Steps to create prisma
+1. npm install prisma --save-dev
+2. npm install @prisma/client
+3. npx prisma init 
