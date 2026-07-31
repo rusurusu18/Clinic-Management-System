@@ -185,7 +185,7 @@
 // })
 
 
-//-------------------Create CRUD operations---------------------//
+//-------------------CRUD operations---------------------//
 
 //create students 
 app.post("/students",(req,res)=>{
@@ -232,6 +232,16 @@ app.delete("/students/:id",(req,res)=>{
     )
 })
 
+
+//crud example using prisma
+prisma.user.create({
+    data:{
+        name:"Rushu",
+        age: 21,
+        address: "ITH",
+        email:"rushu123@gmail.com"
+    }
+})
 const PORT=process.env.PORT || 3000;
 
 app.listen(PORT,()=>{
