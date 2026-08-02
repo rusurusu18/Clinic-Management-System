@@ -17,8 +17,19 @@ datasource db {
 //a model becomes a database table 
 model User{
   id Int @id @default(autoincrement())
-  name String 
-  age Int
-  address String
+  fullName String 
   email String @unique
+  phone String @unique
+  password String
+  role Role @default(PATIENT)
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  ADMIN
+  STAFF
 }
