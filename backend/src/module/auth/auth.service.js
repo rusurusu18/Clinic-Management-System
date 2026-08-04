@@ -1,8 +1,10 @@
 import {prisma} from "../../config/database.js";
+import { hashPassword } from "../../utils/hash.js";
 
-export const registerUser = async () => {
-    const {fullname, email, password, role, phone} = req.body()
 
+export const registerUser = async (userData) => {
+    const {fullName, email, phone, password, role} = userData;
+  
     //email had existing phone or email 
     const existingUser = await prisma.user.findFirst({
         where: {
@@ -19,19 +21,20 @@ export const registerUser = async () => {
     const newUser = await prisma.user.create(
       {
         data:{
-            fullname,
+            fullName,
             email,
-            password: hashedPassword,
-            role,
-            phone
+            phone,
+            password: hashPassword,
+            role
+
         },
         select:{
             id:true,
-            fullname:true,
+            fullName:true,
             email:true,
+            phone:true,
             password:true,
             role:true,
-            phone:true,
             createdAt:true,
             updatedAt:true
         }
