@@ -26,6 +26,15 @@ model User{
   updatedAt DateTime @updatedAt
 }
 
+model RefreshmentToken {
+  id Int @id @default(autoincrement())
+  token String @db.Text
+  expiresAt DateTime
+  isRevoked Boolean @default(false)
+  createdAt DateTime @default(now())
+  
+}
+
 enum Role {
   PATIENT
   DOCTOR

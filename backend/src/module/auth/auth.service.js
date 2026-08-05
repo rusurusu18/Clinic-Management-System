@@ -42,7 +42,7 @@ const payload = {
 };
 
 const accesstoken = generateAccessToken(payload);
-const refreshtoken = generateRefreshToken(payload);
+const refreshtoken = generateRefreshToken.create(payload);
 
 await prisma.user.update({
   where: {
