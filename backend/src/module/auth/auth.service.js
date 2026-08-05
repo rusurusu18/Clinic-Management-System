@@ -1,5 +1,8 @@
 import { prisma } from "../../config/database.js";
 import { hashPassword } from "../../utils/hash.js";
+import { generateAccessToken, generateRefreshToken } from "../../utils/jwt.js";
+import { error } from "node:console";
+import { MESSAGES } from "../../constans/messages.js";
 
 export const registerUser = async (userData) => {
   const { fullName, email, phone, password, role } = userData;
@@ -36,32 +39,33 @@ export const registerUser = async (userData) => {
   // }
 };
 const payload = {
-  id: user.id,
-  email: user.email,
-  role: user.role,
+  id: newuser.id,
+  email: newuser.email,
+  role: newuser.role,
 };
 
 const accesstoken = generateAccessToken(payload);
-const refreshtoken = generateRefreshToken.create(payload);
+const refreshtoken = generateRefreshToken(payload);
 
-await prisma.user.update({
-  where: {
-    id: user.id,
-  },
+   await prisma.refreshToken.create({
   data: {
-    refreshToken: refreshtoken,
+    token: refreshToken,
+    userId: newUser.id,
+    expiresAt: new Date(
+      Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
+    ),
   },
 });
 
 return {
   newUser: {
-    id: user.id,
-    fullName: user.fullName,
-    email: user.email,
-    phone: user.phone,
-    role: user.role,
-    isActive: user.isActive,
+    id: newuser.id,
+    fullName: newuser.fullName,
+    email: newuser.email,
+    phone: newuser.phone,
+    role: newuser.role,
+    isActive: newuser.isActive,
   },
-  accessToken: accesstoken,
-  refreshToken: refreshtoken,
+  accessToken,
+   refreshToken,
 };

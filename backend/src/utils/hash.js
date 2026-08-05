@@ -1,13 +1,24 @@
-import bcrypt from "bcrypt";
-
-const salt_rounds = 10;  //assignment 
-
-export const hashPassword = async (password) => {
-    return await bcrypt.hash(password, salt_rounds)
-};
+import jwt from "jsonwebtoken" 
+import { env } from "../config/env.js"
 
 
-const comparePassword = async (password, hashedPassword) => {
-    return await bcrypt.compare(password, hashedPassword)
+export  const generateAccessToken=(payload)=>{
+   return jwt.sign(payload,env.JWT_ACCESS_SECRET,{
+         expiresIn:env.ACCESS_TOKEN_EXPIRES
+    })
 }
 
+
+export const generateRefreshToken=(payload)=>{
+    return jwt.sign(payload,env.JWT_REFRESH_SECRET,{
+         expiresIn:env.REFRESH_TOKEN_EXPIRES
+    })
+}
+
+export const verifyACCESSTOKEN=(payload)=>{
+    return jwt.verify(token , env.JWT_ACCESS_SECRET)
+}
+
+export const verifyRefreshToken=(payload)=>{
+    return jwt.verify(token , env.JWT_REFRESH_SECRET)
+}
