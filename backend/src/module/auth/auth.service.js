@@ -47,12 +47,12 @@ const payload = {
 const accesstoken = generateAccessToken(payload);
 const refreshtoken = generateRefreshToken(payload);
 
-   await prisma.refreshToken.create({
+await prisma.refreshToken.create({
   data: {
     token: refreshToken,
     userId: newUser.id,
     expiresAt: new Date(
-      Date.now() + 7 * 24 * 60 * 60 * 1000 // 7 days
+      Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
     ),
   },
 });
@@ -67,5 +67,55 @@ return {
     isActive: newuser.isActive,
   },
   accessToken,
-   refreshToken,
+  refreshToken,
 };
+
+const loginUser = async (email, password,rememberMe=false) => {
+  // const {email,password} = loginData;
+
+  //find user 
+  const user = await prisma.user.findUnique({ 
+    where:{email}
+  })
+  if(!user){
+    throw new Error(MESSAGES.USER_NOT_FOUND);
+  }
+  if(!user.isActive){
+    throw new Error(MESSAGES.ACCOUNT_INACTIVE);
+
+    //verify password
+    const isvalidPassword = await comparePassword(password,user.password);
+    if(!isvalidPassword){
+      throw new Error(MESSAGES.INVALID_PASSWORD);
+    }
+
+    const {accessToken,refreshToken} = generateAccessToken(user);
+    //last login update and refresh token 
+    await prisma.user.update({
+      where:{id:user.id},
+      data:{
+        lastLogin:new Date(),
+        refreshToken:refreshToken,
+      }
+    });
+
+    //remove sensitive data
+    const {password:_,refreshToken:__,...userWithoutSensitiveData} = user;
+    return {
+      user:userWithoutSensitiveData,
+      accessToken,
+      refreshToken
+    }
+  }
+};
+
+export const logoutUser = async (userId) => {
+  //delete refresh token from database
+  await prisma.user.update({
+    where:{id:userId},
+    data:{
+      refreshToken:null
+    }
+  })
+  return true;  
+}

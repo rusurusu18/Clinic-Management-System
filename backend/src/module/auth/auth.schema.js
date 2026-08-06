@@ -16,3 +16,10 @@ export const registerSchema = z.object({
   .optional()
 
 })
+
+export const loginSchema = z.object({
+  email: z.string().trim().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters same as used during registration"),
+  rememberMe: z.boolean().default(false).optional(),
+})
+  

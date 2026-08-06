@@ -34,3 +34,29 @@ export const register = async (req, res) => {
     return errorResponse(res, error.message, STATUS_CODES.BAD_REQUEST);
   }
 };
+
+export const login = async (req, res) => {
+  try {
+    const loginData= loginData.parse(req.body);
+    const result = await loginUser(loginData);
+
+    //set refresh token in http only
+    setRefreshTokenCookie(res, result.accessToken);
+
+    //refresh token removed from the response body
+    delete result.refreshToken;
+
+    return successResponse(
+      res,
+      result,
+      MESSAGES.LOGIN_SUCCESS
+    );
+  } catch (error) {
+      return errorResponse(
+        res,
+        MESSAGES.VALIDATION_FAILED,
+        error.flatten(),
+        STATUS_CODES.BAD_REQUEST
+      );
+  }
+}
