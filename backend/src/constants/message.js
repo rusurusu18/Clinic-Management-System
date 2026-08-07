@@ -12,8 +12,10 @@ export const MESSAGES ={
     ACCOUNT_INACTIVE:"Account is inactive",
     TOKEN_REFRESHED:"Token refreshed successfully",
     INVALID_REFRESH_TOKEN:"Invalid refresh token",
+    INVALID_ACCESS_TOKEN:"Invalid access token",
     VALIDATION_FAILED:"Validation Failed",
     INTERNAL_SERVER_ERROR:"Internal server error",
+    USER_INACTIVE:"USER is not Active",
     //user
     USER_NOT_FOUND:"User not found",
     USER_ALREADY_EXISTS:"User already exists",

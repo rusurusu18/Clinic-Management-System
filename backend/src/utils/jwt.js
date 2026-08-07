@@ -21,3 +21,7 @@ export const verifyAccessToken = (payload) => {
 export const verifyAccessToken = (payload) => {
         return jwt.verify(token, env.JWT_REFRESH_SECRET);
 }
+
+export const verifyRefreshToken =(payload)=>{
+    return jwt.verify(token, env.JWT_REFRESH_SECRET)
+}
