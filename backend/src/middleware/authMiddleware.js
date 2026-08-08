@@ -1,50 +1,65 @@
+import { STATUS_CODES } from "../constants/statusCodes.js";
+import { MESSAGES } from "../constants/message.js";
 import { errorResponse } from "../utils/response.js";
-import {UNAUTHORIZED,FORBIDDEN} from "../constants/statusCodes.js"
-import { verifyACCESSTOKEN } from "../utils/hash.js";
-import {INVALID_ACCESS_TOKEN, USER_NOT_FOUND} from "../constants/message.js"
+import { verifyAccessToken } from "../utils/jwt.js";
+import { prisma } from "../config/database.js";
 
+export const authenticate = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
 
-export const authenticate = async (req, res, next)=>{
-    try{
-        //get token from authorization header 
-        const token = req.headers.authorization?.split(" ")[1];
-
-
-        if (!token){
-            return errorResponse(
-                res,new Error(Error.ACCESS_TOKEN_REQUIRED),
-                UNAUTHORIZED
-            )
-        }
-        const decoded = verifyACCESSTOKEN(token)
-        if (!decoded){
-            return errorResponse(
-                res, new Error (MESSAGES.INVALID_ACCESS_TOKEN)
-            )
-        }
-        //get user from database
-        const user = await prisma.user.findUnique({
-            where:{
-                id:decoded.id
-            }
-        })
-        if (!user){
-            return errorResponse(res,new Error (MESSAGES.USER_NOT_FOUND),
-            UNAUTHORIZED
-        )
-        }
-        if (!user.isActive){
-            return errorResponse(res,new Error(MESSAGES.USER_INACTIVE),
-            FORBIDDEN
-        )
-        }
-        req.user =user;
-        next()
+    if (!token) {
+      return errorResponse(
+        res,
+        MESSAGES.ACCESS_TOKEN_REQUIRED,
+        null,
+        STATUS_CODES.UNAUTHORIZED
+      );
     }
-    catch(error){
-        console.log("error")
-    }
-}
 
-//authorization middleware 
-// validation  middleware 
+    const decoded = verifyAccessToken(token);
+    if (!decoded) {
+      return errorResponse(
+        res,
+        MESSAGES.INVALID_ACCESS_TOKEN,
+        null,
+        STATUS_CODES.UNAUTHORIZED
+      );
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        id: decoded.id,
+      },
+    });
+
+    if (!user) {
+      return errorResponse(
+        res,
+        MESSAGES.USER_NOT_FOUND,
+        null,
+        STATUS_CODES.UNAUTHORIZED
+      );
+    }
+
+    if (!user.isActive) {
+      return errorResponse(
+        res,
+        MESSAGES.USER_INACTIVE,
+        null,
+        STATUS_CODES.FORBIDDEN
+      );
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    return errorResponse(
+      res,
+      error.message || MESSAGES.INTERNAL_SERVER_ERROR,
+      null,
+      STATUS_CODES.INTERNAL_SERVER_ERROR
+    );
+  }
+};
