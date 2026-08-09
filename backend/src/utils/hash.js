@@ -1,24 +1,14 @@
-import jwt from "jsonwebtoken";
-import { env } from "../config/env.js";
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
-export const generateAccessToken = (payload) => {
-  return jwt.sign(payload, env.JWT_ACCESS_SECRET, {
-    expiresIn: env.ACCESS_TOKEN_EXPIRES,
-  });
+export const hashPassword = async (password) => {
+  return await bcrypt.hash(password, 12);
 };
 
-export const generateRefreshToken = (payload) => {
-  return jwt.sign(payload, env.JWT_REFRESH_SECRET, {
-    expiresIn: env.REFRESH_TOKEN_EXPIRES,
-  });
+export const comparePassword = async (password, hashedPassword) => {
+  return await bcrypt.compare(password, hashedPassword);
 };
 
-export const verifyAccessToken = (token) => {
-  return jwt.verify(token, env.JWT_ACCESS_SECRET);
+export const generateTokenHash = (token) => {
+  return crypto.createHash('sha256').update(token).digest('hex');
 };
-
-export const verifyRefreshToken = (token) => {
-  return jwt.verify(token, env.JWT_REFRESH_SECRET);
-};
-
-export const verifyACCESSTOKEN = verifyAccessToken;

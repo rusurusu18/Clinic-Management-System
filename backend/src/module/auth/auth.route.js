@@ -1,16 +1,11 @@
-import {Router} from "express"
-import authRoutes from "./auth/auth.route.js"
-import { STATUS_CODES } from "../../constants/statusCodes.js"
+import { Router } from 'express';
+import { register, login } from './auth.controller.js';
+import { validate } from '../../middleware/validationMiddleware.js';
+import { registerSchema, loginSchema } from './auth.schema.js';
 
-const router = Router()
+const router = Router();
 
-router.post("/login",(req,res)=>{
-    return res.status(STATUS_CODES.OK).json({
-        success:true,
-        message:"Clinic Management System "
-    })  
-})
-router.use("/auth",authRoutes)
+router.post('/register', validate(registerSchema), register);
+router.post('/login', validate(loginSchema), login);
 
-
-export default router 
+export default router;

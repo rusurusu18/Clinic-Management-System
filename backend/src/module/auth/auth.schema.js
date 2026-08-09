@@ -1,25 +1,36 @@
-import {optional, z} from 'zod';
-import { Roles } from '../../constants/role.js';
+import { z } from 'zod';
+import { ROLES } from '../../constants/role.js';
+
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
 export const registerSchema = z.object({
-    fullName:z.string().trim().min(3,"Fullname must be at least 3 characters"),
-    email:z.string().trim().email("Invalid email address"),
-    phone:z.string().trim().min(10,"Phone number must be at least 10 digits").max(15,"Phone number cannot exceed 15 digits").optional(),
-    password:z.string().min(8,"Password must be of 8 characters"),
-     role: z
-  .enum([
-    Roles.ADMIN,
-    Roles.DOCTOR,
-    Roles.PATIENT,
-    Roles.STAFF,
-  ])
-  .optional()
-
-})
+  email: z.string().email('Please provide a valid email').min(1, 'Email is required'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(passwordRegex, 'Password must contain at least one uppercase, one lowercase, one number, and one special character'),
+  fullName: z.string().min(2, 'Full name must be at least 2 characters').max(100, 'Full name cannot exceed 100 characters'),
+  phoneNumber: z.string().regex(/^[0-9]{10,15}$/, 'Phone number must be 10-15 digits').optional().nullable().transform((val) => val || null),
+  role: z.enum([ROLES.ADMIN, ROLES.DOCTOR, ROLES.PATIENT, ROLES.STAFF]).optional().default(ROLES.PATIENT),
+});
 
 export const loginSchema = z.object({
-  email: z.string().trim().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters same as used during registration"),
-  rememberMe: z.boolean().default(false).optional(),
-})
-  
+  email: z.string().email('Please provide a valid email').min(1, 'Email is required'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+export const refreshTokenSchema = z.object({
+  refreshToken: z.string().min(1, 'Refresh token is required'),
+});
+
+export const updateProfileSchema = z.object({
+  fullName: z.string().min(2, 'Full name must be at least 2 characters').max(100, 'Full name cannot exceed 100 characters').optional(),
+  phoneNumber: z.string().regex(/^[0-9]{10,15}$/, 'Phone number must be 10-15 digits').optional().nullable().transform((val) => val || null),
+  currentPassword: z.string().optional(),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters').regex(passwordRegex, 'Password must contain at least one uppercase, one lowercase, one number, and one special character').optional(),
+}).refine((data) => {
+  if (data.newPassword && !data.currentPassword) return false;
+  return true;
+}, { message: 'Current password is required to change password', path: ['currentPassword'] }).refine((data) => {
+  if (data.currentPassword && !data.newPassword) return false;
+  return true;
+}, { message: 'New password is required when changing password', path: ['newPassword'] });
