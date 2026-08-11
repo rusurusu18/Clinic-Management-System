@@ -1,34 +1,33 @@
 import crypto from 'crypto';
 import prisma from "../config/database.js";
-import { ENV } from '../config/env.js';
+import { sendVerificationEmail, sendPasswordResetEmail } from "./email.js";
 
-// Constants
-const OTP_EXPIRY_MINUTES = ENV.OTP_EXPIRY_MINUTES;
-const OTP_RESEND_COOLDOWN_MINUTES =2;
+const OTP_EXPIRY_MINUTES = 10;
+const OTP_RESEND_COOLDOWN_MINUTES = 2;
 
-// generate otp random
+// Generate OTP
 const generateOtp = (length = 6) => {
     const min = Math.pow(10, length - 1);
     const max = Math.pow(10, length) - 1;
     return crypto.randomInt(min, max + 1).toString();
 };
 
-// generate the otp expir time 
+// Generate OTP expiry
 const generateOtpExpiry = (minutes = OTP_EXPIRY_MINUTES) => {
     const date = new Date();
     date.setMinutes(date.getMinutes() + minutes);
     return date;
 };
 
-// check otp i s expired
+// Check if OTP is expired
 const isOtpExpired = (expiryDate) => {
     return new Date() > new Date(expiryDate);
 };
 
-// send otp 
+// Send OTP
 export const sendOtp = async (email, type = "EMAIL_VERIFICATION", userId = null) => {
     try {
-        // Check if there's an existing unused OTP
+        // Check existing OTP and cooldown
         const existingOTP = await prisma.oTP.findFirst({
             where: {
                 email,
@@ -44,7 +43,6 @@ export const sendOtp = async (email, type = "EMAIL_VERIFICATION", userId = null)
         });
 
         if (existingOTP) {
-            // Check cooldown period
             const cooldownMs = OTP_RESEND_COOLDOWN_MINUTES * 60 * 1000;
             const timeSinceLastOTP = Date.now() - new Date(existingOTP.createdAt).getTime();
 
@@ -53,18 +51,15 @@ export const sendOtp = async (email, type = "EMAIL_VERIFICATION", userId = null)
                 throw new Error(`Please wait ${remainingSeconds} seconds before requesting another OTP`);
             }
 
-            // Mark existing OTP as used
             await prisma.oTP.update({
                 where: { id: existingOTP.id },
                 data: { isUsed: true }
             });
         }
 
-        // Generate new OTP
         const otp = generateOtp();
         const expiresAt = generateOtpExpiry(OTP_EXPIRY_MINUTES);
 
-        // Store OTP in database
         await prisma.oTP.create({
             data: {
                 email,
@@ -83,10 +78,9 @@ export const sendOtp = async (email, type = "EMAIL_VERIFICATION", userId = null)
     }
 };
 
-// verify otp
+// Verify OTP
 export const verifyOtp = async (email, otp, type = "EMAIL_VERIFICATION") => {
     try {
-        // Find OTP record
         const otpRecord = await prisma.oTP.findFirst({
             where: {
                 email,
@@ -103,9 +97,7 @@ export const verifyOtp = async (email, otp, type = "EMAIL_VERIFICATION") => {
             throw new Error('Invalid OTP');
         }
 
-        // Check if OTP is expired
         if (isOtpExpired(otpRecord.expiresAt)) {
-            // Mark as used (expired)
             await prisma.oTP.update({
                 where: { id: otpRecord.id },
                 data: { isUsed: true }
@@ -113,7 +105,6 @@ export const verifyOtp = async (email, otp, type = "EMAIL_VERIFICATION") => {
             throw new Error('OTP has expired');
         }
 
-        // Mark OTP as used (successful verification)
         await prisma.oTP.update({
             where: { id: otpRecord.id },
             data: { isUsed: true }
@@ -131,13 +122,9 @@ export const verifyOtp = async (email, otp, type = "EMAIL_VERIFICATION") => {
     }
 };
 
-
- //Resend OTP - Generate and send new OTP
-
-
- export const resendOtp = async (email, type = "EMAIL_VERIFICATION", userId = null) => {
+// Resend OTP
+export const resendOtp = async (email, type = "EMAIL_VERIFICATION", userId = null) => {
     try {
-        // Check if there's an existing unused OTP
         const existingOTP = await prisma.oTP.findFirst({
             where: {
                 email,
@@ -153,7 +140,6 @@ export const verifyOtp = async (email, otp, type = "EMAIL_VERIFICATION") => {
         });
 
         if (existingOTP) {
-            // Check cooldown period
             const cooldownMs = OTP_RESEND_COOLDOWN_MINUTES * 60 * 1000;
             const timeSinceLastOTP = Date.now() - new Date(existingOTP.createdAt).getTime();
 
@@ -162,18 +148,15 @@ export const verifyOtp = async (email, otp, type = "EMAIL_VERIFICATION") => {
                 throw new Error(`Please wait ${remainingSeconds} seconds before requesting another OTP`);
             }
 
-            // Mark existing OTP as used
             await prisma.oTP.update({
                 where: { id: existingOTP.id },
                 data: { isUsed: true }
             });
         }
 
-        // Generate new OTP
         const otp = generateOtp();
         const expiresAt = generateOtpExpiry(OTP_EXPIRY_MINUTES);
 
-        // Store OTP in database
         await prisma.oTP.create({
             data: {
                 email,
@@ -190,4 +173,10 @@ export const verifyOtp = async (email, otp, type = "EMAIL_VERIFICATION") => {
         console.error('Resend OTP Error:', error);
         throw error;
     }
+};
+
+export {
+    generateOtp,
+    generateOtpExpiry,
+    isOtpExpired
 };
