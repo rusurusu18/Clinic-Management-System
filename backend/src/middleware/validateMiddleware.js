@@ -1,5 +1,8 @@
 import { validationResult } from 'express-validator';
-import responseHandler from '../utils/response.js';
+import {
+  successResponse,
+  errorResponse,
+} from "../utils/response.js";
 
 export const validate = (validations) => {
     return async (req, res, next) => {
