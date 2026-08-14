@@ -1,5 +1,5 @@
 import prisma from "../../config/database.js"
-import MESSAGES from "../../constants/message.js"
+import {MESSAGES} from "../../constants/message.js"
 
 //create Patient
 export const createPatient = async (patientData)=>{

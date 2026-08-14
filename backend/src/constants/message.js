@@ -11,6 +11,7 @@ export const MESSAGES = {
     USER_FETCHED: 'User fetched successfully',
     OTP_SENT: 'OTP sent successfully',
     OTP_VERIFIED: 'OTP verified successfully',
+    CREATEDRESPONSE:'Created successfully',
 
     // Error Messages
     USER_NOT_FOUND: 'User not found',

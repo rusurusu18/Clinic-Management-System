@@ -1,4 +1,4 @@
-import {z} from "zod"
+import {z,optional,string} from "zod"
 
 //create schema
 export const createPatientSchema =z.object({
