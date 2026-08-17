@@ -1,41 +1,117 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted mysql database in seconds: `npx create-db`
-
-//this tells prisma to create/generate javascript client
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "mysql"
 }
 
-//a model becomes a database table 
-model User{
-   id           String   @id @default(cuid())
-  email        String   @unique
-  password     String
-  fullName     String
-  phoneNumber  String?
-  role         Role     @default(PATIENT)
-  isActive     Boolean  @default(true)
-  isEmailVerified Boolean @default(false)
-  lastLoginAt  DateTime?
-  lastLoginIP  String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  password        String
+  fullName        String
+  phone           String?
+  role            Role     @default(PATIENT)
+  isActive        Boolean  @default(true)
+  isEmailVerified Boolean  @default(false)
+  lastLoginAt     DateTime?
+  lastLoginIP     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   refreshTokens RefreshToken[]
   sessions      Session[]
   auditLogs     AuditLog[]
-  otps          otp[]
-  patient  Patient?
-  gender   Gender?
+  otps          OTP[]
+  patient       Patient?
+  doctor        Doctor?
 
   @@map("users")
+}
+
+model Patient {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dateOfBirth      DateTime?
+  gender           Gender?
+  bloodGroup       String?
+  allergies        Json?
+  medicalHistory   Json?
+  emergencyContact Json?
+  address          String?
+  city             String?
+  state            String?
+  country          String?
+  zipCode          String?
+  insuranceProvider String?
+  insuranceNumber  String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  appointments Appointment[]
+
+  @@map("patients")
+}
+
+model Doctor {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialization  String?
+  licenseNumber   String?
+  qualifications  Json?
+  experience      Int?
+  hospital        String?
+  department      String?
+  consultationFee Float?
+  availableDays   Json?
+  bio             String?
+  rating          Float    @default(0)
+  totalReviews    Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  appointments Appointment[]
+
+  @@map("doctors")
+}
+
+model Appointment {
+  id           String            @id @default(cuid())
+  patientId    String
+  patient      Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId     String
+  doctor       Doctor            @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  date         DateTime
+  time         String
+  status       AppointmentStatus @default(SCHEDULED)
+  type         String?
+  notes        String?
+  symptoms     Json?
+  prescription String?
+  diagnosis    String?
+  followUpDate DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+
+  @@map("appointments")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  revoked   Boolean  @default(false)
+  revokedAt DateTime?
+
+  @@map("refresh_tokens")
 }
 
 model Session {
@@ -53,22 +129,7 @@ model Session {
   @@map("sessions")
 }
 
-model RefreshToken {
-   id Int @id @default(autoincrement())
-  token String @db.Text
-   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userAgent String?
-  ipAddress String?
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  revoked   Boolean  @default(false)
-  revokedAt DateTime?
-
-  @@map("refresh_tokens")
-}
-
-model otp {
+model OTP {
   id        String   @id @default(cuid())
   email     String
   otp       String
@@ -96,72 +157,28 @@ model AuditLog {
   @@map("audit_logs")
 }
 
-model Patient{
-  id        String   @id @default(cuid())
-  userId String @unique
-  user User @relation(fields: [userId], references: [id],onDelete:Cascade)
-  dateOfBirth DateTime?
-  gender     Gender?
-  bloodGroup String?
-  allergies String?
-  medicalHistory Json?
-  emergencyContact Json?
-  address String?
-  city  String?
-  province String?
-  country String?
-  zipCode String?
-  insuranceProvide  String?
-  insuranceNumber  String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  appointments Appointment[]
-
-  @@map("patients")
-
-}
-
-model Appointment{
-  id String @id @default(cuid())
-  patientId String
-  patient Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  date DateTime 
-  time String
-  status AppointmentStatus @default(SCHEDULED) 
-  type String?
-  notes String?
-  symptoms String?
-  prescription String?
-  diagnosis DateTime?
-  followUpDate DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map ("appointments")
-}
-
-
 enum Role {
-  PATIENT
-  DOCTOR
   ADMIN
+  DOCTOR
+  PATIENT
   RECEPTIONIST
 }
 
-enum AppointmentStatus{
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum AppointmentStatus {
   SCHEDULED
   CONFIRMED
+  COMPLETED
   CANCELLED
   RESCHEDULED
-  PENDING
   NO_SHOW
 }
 
-enum Gender{
-  MALE
-  FEMALE
-  OTHERS
-}
 enum OTPType {
   EMAIL_VERIFICATION
   PASSWORD_RESET
