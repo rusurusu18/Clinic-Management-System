@@ -89,7 +89,7 @@ export const createDoctor = async (doctorData) => {
 
 // ==================== GET ALL DOCTORS ====================
 export const getAllDoctors = async (page = 1, limit = 10, search = null, specialization = null, hospital = null, minRating = null) => {
-  const skip = (page - 1) * limit;
+  const skip = (page - 1) * limit;   // 1-1 10 = 0 2-1 *10 = 10
 
   const where = {};
   if (search) {
