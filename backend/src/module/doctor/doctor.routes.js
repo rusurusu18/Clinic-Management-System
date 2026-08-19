@@ -8,7 +8,7 @@ import {
   validate 
 } from './doctor.schema.js';
 import { verifyToken, authorize } from '../../middleware/authMiddleware.js';
-import { ROLES } from '../../constants/roles.js';
+import { ROLES } from '../../constans/roles.js';
 
 const router = express.Router();
 
