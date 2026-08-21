@@ -6,10 +6,9 @@ datasource db {
   provider = "mysql"
 }
 
-
-// =========================
+// =====================================================
 // ENUMS
-// =========================
+// =====================================================
 
 enum Role {
   PATIENT
@@ -57,10 +56,34 @@ enum SessionStatus {
   REVOKED
 }
 
+enum PrescriptionStatus {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
 
-// =========================
+enum ReportType {
+  LAB_REPORT
+  X_RAY
+  MRI
+  CT_SCAN
+  ULTRASOUND
+  BLOOD_TEST
+  URINE_TEST
+  ECG
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+// =====================================================
 // USER
-// =========================
+// =====================================================
 
 model User {
   id              String   @id @default(cuid())
@@ -74,9 +97,8 @@ model User {
   isEmailVerified Boolean  @default(false)
   lastLoginAt     DateTime?
   lastLoginIP     String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   refreshTokens RefreshToken[]
   sessions      Session[]
@@ -85,15 +107,15 @@ model User {
 
   patient Patient?
   doctor  Doctor?
+
   headedDepartments Department[] @relation("DepartmentHead")
 
   @@map("users")
 }
 
-
-// =========================
+// =====================================================
 // REFRESH TOKEN
-// =========================
+// =====================================================
 
 model RefreshToken {
   id        String   @id @default(cuid())
@@ -112,10 +134,9 @@ model RefreshToken {
   @@map("refresh_tokens")
 }
 
-
-// =========================
+// =====================================================
 // SESSION
-// =========================
+// =====================================================
 
 model Session {
   id           String        @id @default(cuid())
@@ -137,10 +158,9 @@ model Session {
   @@map("sessions")
 }
 
-
-// =========================
+// =====================================================
 // OTP
-// =========================
+// =====================================================
 
 model OTP {
   id        String   @id @default(cuid())
@@ -161,10 +181,9 @@ model OTP {
   @@map("otps")
 }
 
-
-// =========================
+// =====================================================
 // AUDIT LOG
-// =========================
+// =====================================================
 
 model AuditLog {
   id          String      @id @default(cuid())
@@ -184,10 +203,9 @@ model AuditLog {
   @@map("audit_logs")
 }
 
-
-// =========================
+// =====================================================
 // PATIENT
-// =========================
+// =====================================================
 
 model Patient {
   id     String @id @default(cuid())
@@ -195,25 +213,27 @@ model Patient {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  dateOfBirth      DateTime?
-  gender           Gender?
-  bloodGroup       String?
+  dateOfBirth DateTime?
+  gender      Gender?
+  bloodGroup  String?
+
   allergies        Json
   medicalHistory   Json?
   emergencyContact Json?
 
-  address String?
-  city    String?
-  state   String?
-  country String?
-  zipCode String?
+  address  String?
+  city     String?
+  state    String?
+  country  String?
+  zipCode  String?
 
   insuranceProvider String?
   insuranceNumber   String?
 
   documents Json?
 
-  appointments Appointment[]
+  medicalRecords MedicalRecord[]
+  appointments  Appointment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -221,59 +241,75 @@ model Patient {
   @@map("patients")
 }
 
-
-// =========================
-// DOCTOR
-// =========================
+// =====================================================
+// DEPARTMENT
+// =====================================================
 
 model Department {
-  id          String   @id @default(cuid())
-  name        String   @unique
+  id          String  @id @default(cuid())
+  name        String  @unique
   description String?
+
   headDoctorId String?
-  headDoctor  User?    @relation("DepartmentHead", fields: [headDoctorId], references: [id], onDelete: SetNull)
-  hospital    String?
-  phone       String?
-  email       String?
-  location    String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 
-  doctors     Doctor[]
+  headDoctor User? @relation("DepartmentHead", fields: [headDoctorId], references: [id], onDelete: SetNull)
 
+  hospital String?
+  phone    String?
+  email    String?
+  location String?
+
+  isActive Boolean @default(true)
+
+  doctors Doctor[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([headDoctorId])
   @@map("departments")
 }
 
+// =====================================================
+// DOCTOR
+// =====================================================
 
 model Doctor {
-  id                String   @id @default(cuid())
-  userId            String   @unique
-  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  departmentId      String?
-  department        Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  specialization    String?
-  licenseNumber     String?
-  qualifications    Json
-  experience        Int?
-  hospital          String?
-  consultationFee   Float?
-  availableDays     Json?
-  bio               String?
-  rating            Float    @default(0)
-  totalReviews      Int      @default(0)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id     String @id @default(cuid())
+  userId String @unique
 
-  appointments Appointment[]
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  departmentId String?
+
+  department Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  specialization  String?
+  licenseNumber   String?
+  qualifications  Json
+  experience      Int?
+  hospital        String?
+  consultationFee Float?
+
+  availableDays Json?
+  bio           String?
+
+  rating       Float @default(0)
+  totalReviews Int   @default(0)
+
+  appointments   Appointment[]
+  medicalRecords MedicalRecord[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([departmentId])
   @@map("doctors")
 }
 
-
-// =========================
+// =====================================================
 // APPOINTMENT
-// =========================
+// =====================================================
 
 model Appointment {
   id String @id @default(cuid())
@@ -289,9 +325,11 @@ model Appointment {
 
   status AppointmentStatus @default(SCHEDULED)
 
-  type   String?
-  notes  String?
+  type     String?
+  notes    String?
   symptoms Json
+
+  medicalRecord MedicalRecord?
 
   prescription String?
   diagnosis    String?
@@ -305,4 +343,95 @@ model Appointment {
   @@index([date])
   @@index([status])
   @@map("appointments")
+}
+
+// =====================================================
+// MEDICAL RECORD
+// =====================================================
+
+model MedicalRecord {
+  id String @id @default(cuid())
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  doctorId String
+  doctor   Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  appointmentId String? @unique
+
+  appointment Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  diagnosis     String?
+  diagnosisDate DateTime?
+  symptoms      Json
+  notes         String?
+
+  prescriptions Prescription[]
+  reports       Report[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@map("medical_records")
+}
+
+// =====================================================
+// PRESCRIPTION
+// =====================================================
+
+model Prescription {
+  id String @id @default(cuid())
+
+  medicalRecordId String
+
+  medicalRecord MedicalRecord @relation(fields: [medicalRecordId], references: [id], onDelete: Cascade)
+
+  medication   String
+  dosage       String
+  frequency    String
+  duration     String
+  instructions String?
+
+  prescribedDate DateTime @default(now())
+  expiryDate    DateTime?
+
+  refills Int @default(0)
+
+  status PrescriptionStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([medicalRecordId])
+  @@map("prescriptions")
+}
+
+// =====================================================
+// REPORT
+// =====================================================
+
+model Report {
+  id String @id @default(cuid())
+
+  medicalRecordId String
+
+  medicalRecord MedicalRecord @relation(fields: [medicalRecordId], references: [id], onDelete: Cascade)
+
+  name   String
+  type   ReportType
+  date   DateTime @default(now())
+  result String?
+  fileUrl String?
+  notes  String?
+
+  status ReportStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([medicalRecordId])
+  @@map("reports")
 }
