@@ -6,134 +6,9 @@ datasource db {
   provider = "mysql"
 }
 
-model User {
-  id              String         @id @default(cuid())
-  email           String         @unique
-  password        String
-  fullName        String
-  phoneNumber     String?
-  role            Role           @default(PATIENT)
-  isActive        Boolean        @default(true)
-  isEmailVerified Boolean        @default(false)
-  lastLoginAt     DateTime?
-  lastLoginIP     String?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  gender          users_gender?
-  auditLogs       AuditLog[]
-  otps            OTP[]
-  patient         Patient?
-  refreshTokens   RefreshToken[]
-  sessions        Session[]
-
-  @@map("users")
-}
-
-model RefreshToken {
-  id        Int       @id @default(autoincrement())
-  token     String    @db.Text
-  userId    String
-  userAgent String?
-  ipAddress String?
-  expiresAt DateTime
-  createdAt DateTime  @default(now())
-  revoked   Boolean   @default(false)
-  revokedAt DateTime?
-  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId], map: "refresh_tokens_userId_fkey")
-  @@map("refresh_tokens")
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  userId       String
-  token        String   @unique
-  userAgent    String?
-  ipAddress    String?
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
-  lastActivity DateTime @default(now())
-  isActive     Boolean  @default(true)
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId], map: "sessions_userId_fkey")
-  @@map("sessions")
-}
-
-model OTP {
-  id        String    @id @default(cuid())
-  email     String
-  otp       String
-  type      otps_type
-  expiresAt DateTime
-  createdAt DateTime  @default(now())
-  isUsed    Boolean   @default(false)
-  userId    String?
-  user      User?     @relation(fields: [userId], references: [id])
-
-  @@index([userId], map: "otps_userId_fkey")
-  @@map("otps")
-}
-
-model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String
-  action    String
-  resource  String
-  details   Json?
-  ipAddress String?
-  userAgent String?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId], map: "audit_logs_userId_fkey")
-  @@map("audit_logs")
-}
-
-model Patient {
-  id               String           @id @default(cuid())
-  userId           String           @unique
-  dateOfBirth      DateTime?
-  gender           patients_gender?
-  bloodGroup       String?
-  allergies        String?
-  medicalHistory   Json?
-  emergencyContact Json?
-  address          String?
-  city             String?
-  province         String?
-  country          String?
-  zipCode          String?
-  insuranceProvide String?
-  insuranceNumber  String?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  appointments     Appointment[]
-  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("patients")
-}
-
-model Appointment {
-  id           String              @id @default(cuid())
-  patientId    String
-  date         DateTime
-  time         String
-  status       appointments_status @default(SCHEDULED)
-  type         String?
-  notes        String?
-  symptoms     String?
-  prescription String?
-  diagnosis    String?
-  followUpDate DateTime?
-  createdAt    DateTime            @default(now())
-  updatedAt    DateTime            @updatedAt
-  patient      Patient             @relation(fields: [patientId], references: [id], onDelete: Cascade)
-
-  @@index([patientId], map: "appointments_patientId_fkey")
-  @@map("appointments")
-}
+// =========================
+// ENUMS
+// =========================
 
 enum Role {
   PATIENT
@@ -142,28 +17,451 @@ enum Role {
   RECEPTIONIST
 }
 
-enum patients_gender {
+enum Gender {
   MALE
   FEMALE
-  OTHERS
+  OTHER
 }
 
-enum otps_type {
-  EMAIL_VERIFICATION
-  PASSWORD_RESET
-}
-
-enum appointments_status {
+enum AppointmentStatus {
   SCHEDULED
   CONFIRMED
+  COMPLETED
   CANCELLED
   RESCHEDULED
-  PENDING
   NO_SHOW
 }
 
-enum users_gender {
-  MALE
-  FEMALE
-  OTHERS
+enum OTPType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  LOGIN
+  PHONE_VERIFICATION
+}
+
+enum AuditAction {
+  LOGIN
+  LOGOUT
+  REGISTER
+  CREATE
+  UPDATE
+  DELETE
+  PASSWORD_CHANGE
+  PASSWORD_RESET
+}
+
+enum SessionStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+// =========================
+// USER
+// =========================
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  password        String
+  fullName        String
+  phone           String?   @unique
+  avatar          String?
+  role            Role      @default(PATIENT)
+  isActive        Boolean   @default(true)
+  isEmailVerified Boolean   @default(false)
+  lastLoginAt     DateTime?
+  lastLoginIP     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  refreshTokens RefreshToken[]
+  sessions      Session[]
+  auditLogs     AuditLog[]
+  otps          OTP[]
+
+  patient           Patient?
+  doctor            Doctor?
+  headedDepartments Department[] @relation("DepartmentHead")
+
+  @@map("users")
+}
+
+// =========================
+// REFRESH TOKEN
+// =========================
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @db.Text
+  expiresAt DateTime
+  isRevoked Boolean  @default(false)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// =========================
+// SESSION
+// =========================
+
+model Session {
+  id           String        @id @default(cuid())
+  sessionId    String        @unique
+  status       SessionStatus @default(ACTIVE)
+  ipAddress    String?
+  userAgent    String?
+  expiresAt    DateTime
+  lastActiveAt DateTime      @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// =========================
+// OTP
+// =========================
+
+model OTP {
+  id        String   @id @default(cuid())
+  code      String
+  type      OTPType
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  attempts  Int      @default(0)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("otps")
+}
+
+// =========================
+// AUDIT LOG
+// =========================
+
+model AuditLog {
+  id          String      @id @default(cuid())
+  action      AuditAction
+  description String?     @db.Text
+  ipAddress   String?
+  userAgent   String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// =========================
+// PATIENT
+// =========================
+
+model Patient {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  dateOfBirth      DateTime?
+  gender           Gender?
+  bloodGroup       String?
+  allergies        Json
+  medicalHistory   Json?
+  emergencyContact Json?
+
+  address String?
+  city    String?
+  state   String?
+  country String?
+  zipCode String?
+
+  insuranceProvider String?
+  insuranceNumber   String?
+
+  documents Json?
+
+  medicalRecords MedicalRecord[]
+  appointments   Appointment[]
+  bills          Bill[] @relation("PatientBills")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("patients")
+}
+
+// =========================
+// DOCTOR
+// =========================
+
+model Department {
+  id           String   @id @default(cuid())
+  name         String   @unique
+  description  String?
+  headDoctorId String?
+  headDoctor   User?    @relation("DepartmentHead", fields: [headDoctorId], references: [id], onDelete: SetNull)
+  hospital     String?
+  phone        String?
+  email        String?
+  location     String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  doctors Doctor[]
+
+  @@map("departments")
+}
+
+model Doctor {
+  id              String      @id @default(cuid())
+  userId          String      @unique
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  departmentId    String?
+  department      Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  specialization  String?
+  licenseNumber   String?
+  qualifications  Json
+  experience      Int?
+  hospital        String?
+  consultationFee Float?
+  availableDays   Json?
+  bio             String?
+  rating          Float       @default(0)
+  totalReviews    Int         @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  appointments   Appointment[]
+  medicalRecords MedicalRecord[]
+
+  @@map("doctors")
+}
+
+// =========================
+// APPOINTMENT
+// =========================
+
+model Appointment {
+  id String @id @default(cuid())
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  doctorId String
+  doctor   Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  date DateTime
+  time String
+
+  status AppointmentStatus @default(SCHEDULED)
+
+  type     String?
+  notes    String?
+  symptoms Json
+
+  medicalRecord MedicalRecord?
+
+  prescription String?
+  diagnosis    String?
+  followUpDate DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bills Bill[] @relation("AppointmentBills")
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([date])
+  @@index([status])
+  @@map("appointments")
+}
+
+model MedicalRecord {
+  id            String       @id @default(cuid())
+  patientId     String
+  patient       Patient      @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId      String
+  doctor        Doctor       @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  appointmentId String?      @unique
+  appointment   Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  diagnosis     String?
+  diagnosisDate DateTime?
+  symptoms      Json
+  notes         String?
+
+  prescriptions Prescription[]
+  reports       Report[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("medical_records")
+}
+
+model Prescription {
+  id              String        @id @default(cuid())
+  medicalRecordId String
+  medicalRecord   MedicalRecord @relation(fields: [medicalRecordId], references: [id], onDelete: Cascade)
+
+  medication     String
+  dosage         String
+  frequency      String
+  duration       String
+  instructions   String?
+  prescribedDate DateTime           @default(now())
+  expiryDate     DateTime?
+  refills        Int                @default(0)
+  status         PrescriptionStatus @default(ACTIVE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("prescriptions")
+}
+
+model Report {
+  id              String        @id @default(cuid())
+  medicalRecordId String
+  medicalRecord   MedicalRecord @relation(fields: [medicalRecordId], references: [id], onDelete: Cascade)
+
+  name    String
+  type    ReportType
+  date    DateTime     @default(now())
+  result  String?
+  fileUrl String?
+  notes   String?
+  status  ReportStatus @default(PENDING)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("reports")
+}
+model Bill {
+  id              String   @id @default(cuid())
+  patientId       String
+  patient         Patient  @relation("PatientBills", fields: [patientId], references: [id], onDelete: Cascade)
+  appointmentId   String?
+  appointment     Appointment? @relation("AppointmentBills", fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  billNumber      String   @unique
+  invoiceNumber   String   @unique
+  
+  items           Json     
+  subtotal        Float
+  tax             Float    @default(0)
+  discount        Float    @default(0)
+  totalAmount     Float
+    
+  status          BillStatus @default(UNPAID)
+  paymentMethod   PaymentMethod?
+  paymentDate     DateTime?
+  
+  notes           String?
+  
+  generatedBy     String   
+  generatedAt     DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  payments        Payment[]
+
+  @@map("bills")
+}
+
+model Payment {
+  id              String   @id @default(cuid())
+  billId          String
+  bill            Bill     @relation(fields: [billId], references: [id], onDelete: Cascade)
+  
+  amount          Float
+  method          PaymentMethod
+  transactionId   String?
+  paymentDate     DateTime @default(now())
+  notes           String?
+  
+  status          PaymentStatus @default(COMPLETED)
+  refundedAt      DateTime?
+  refundReason    String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("payments")
+}
+
+enum BillStatus {
+  UNPAID
+  PAID
+  PARTIALLY_PAID
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH 
+  KHALTI
+  ESEWA
+  
+  
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PrescriptionStatus {
+  ACTIVE
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+enum ReportType {
+  LAB_REPORT
+  X_RAY
+  MRI
+  CT_SCAN
+  ULTRASOUND
+  BLOOD_TEST
+  URINE_TEST
+  ECG
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
 }
