@@ -3,7 +3,7 @@ import express from "express";
 import * as patientController from "./patient.controller.js";
 import { authorize, verifyToken } from "../../middleware/authMiddleware.js";
 import {createPatientSchema, updatePatientSchema} from "./patient.schema.js";
-import { ROLES } from "../../constants/role.js";
+import { ROLES } from "../../constants/roles.js";
 import { validate } from "../../middleware/validateMiddleware.js";
 
 const router = express.Router();

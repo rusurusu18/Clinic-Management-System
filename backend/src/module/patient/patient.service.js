@@ -1,5 +1,5 @@
 import prisma from "../../config/database.js";
-import { MESSAGES } from "../../constans/messages.js";
+import { MESSAGES } from "../../constants/message.js"
 
 // Helper — maps raw body data to Prisma-compatible types for Patient model
 const mapPatientData = (data) => ({
