@@ -3,7 +3,7 @@ import authRoutes from "../module/auth/auth.routes.js"
 import adminRoutes from "../module/auth/admin.routes.js"
 import patientRoutes from "../module/patient/patient.routes.js"
 import doctorRoutes from "../module/doctor/doctor.routes.js"
-import appointmentRoutes from "../module/appointment/appointent.routes.js"
+import appointmentRoutes from "../module/appointment/appointment.routes.js"
 import departmentRoutes from "../module/department/department.routes.js"
 import medicalRecordRoutes from "../module/medicalRecord/medicalRecord.routes.js"
 
