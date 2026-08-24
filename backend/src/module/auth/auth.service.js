@@ -175,15 +175,14 @@ export const loginUser = async (email, password, userAgent, ipAddress) => {
 
     // Create audit log for security monitoring
     await prisma.auditLog.create({
-        data: {
-            userId: user.id,
-            action: 'LOGIN',
-            resource: 'User',
-            details: { email: user.email },
-            ipAddress,
-            userAgent,
-        },
-    });
+    data: {
+        userId: user.id,
+        action: 'LOGIN',
+        description: `User logged in: ${user.email}`,
+        ipAddress,
+        userAgent,
+    },
+});
 
     // Return user without password
     const { password: _, ...userWithoutPassword } = user;
@@ -211,12 +210,11 @@ export const verifyEmail = async (email, otp) => {
 
     // Create audit log
     await prisma.auditLog.create({
-        data: {
-            userId: user.id,
-            action: 'EMAIL_VERIFIED',
-            resource: "User",
-            details: { email: user.email }
-        }
+    data: {
+        userId: user.id,
+        action: 'UPDATE',
+        description: `Email verified: ${user.email}`,
+    }
     });
 
     return user;
@@ -302,12 +300,11 @@ export const resetPassword = async (email, otp, newPassword) => {
 
     // Create audit log
     await prisma.auditLog.create({
-        data: {
-            userId: user.id,
-            action: 'PASSWORD_RESET',
-            resource: "User",
-            details: { email: user.email }
-        }
+    data: {
+        userId: user.id,
+        action: 'PASSWORD_RESET',
+        description: `Password reset: ${user.email}`,
+    }
     });
 
     return user;
@@ -451,11 +448,11 @@ export const logoutUser = async (userId, accessToken) => {
 
     // Create audit log
     await prisma.auditLog.create({
-        data: {
-            userId,
-            action: 'LOGOUT',
-            resource: 'User',
-        },
+    data: {
+        userId,
+        action: 'LOGOUT',
+        description: 'User logged out',
+    },
     });
 
     return { message: MESSAGES.USER_LOGGED_OUT || 'User logged out successfully' };
@@ -516,12 +513,11 @@ export const updateUserProfile = async (userId, updateData) => {
 
     // Create audit log
     await prisma.auditLog.create({
-        data: {
-            userId: user.id,
-            action: 'PROFILE_UPDATED',
-            resource: "User",
-            details: { email: user.email }
-        }
+    data: {
+        userId: user.id,
+        action: 'UPDATE',
+        description: `Profile updated: ${user.email}`,
+    }
     });
 
     const { password: _, ...userWithoutPassword } = user;
@@ -567,12 +563,11 @@ export const changePassword = async (userId, currentPassword, newPassword) => {
 
     // Create audit log
     await prisma.auditLog.create({
-        data: {
-            userId,
-            action: 'PASSWORD_CHANGED',
-            resource: 'User',
-            details: { email: user.email }
-        }
+    data: {
+        userId,
+        action: 'PASSWORD_CHANGE',
+        description: `Password changed: ${user.email}`,
+    }
     });
 
     return { message: 'Password changed successfully' };
@@ -667,17 +662,12 @@ export const updateUserRole = async (userId, newRole) => {
     });
 
     // Create audit log
-    await prisma.auditLog.create({
-        data: {
-            userId: userId,
-            action: 'ROLE_UPDATED',
-            resource: 'User',
-            details: { 
-                oldRole: user.role,
-                newRole: newRole.toUpperCase(),
-                email: user.email,
-            },
-        },
+   await prisma.auditLog.create({
+    data: {
+        userId,
+        action: 'UPDATE',
+        description: `Role updated for ${user.email}: ${user.role} -> ${newRole.toUpperCase()}`,
+    },
     });
 
     const { password: _, ...userWithoutPassword } = updatedUser;
@@ -723,51 +713,54 @@ export const toggleUserStatus = async (userId) => {
 
     // Create audit log
     await prisma.auditLog.create({
-        data: {
-            userId: userId,
-            action: 'USER_STATUS_TOGGLED',
-            resource: 'User',
-            details: {
-                newStatus: updatedUser.isActive,
-                email: user.email,
-            },
-        },
+    data: {
+        userId,
+        action: 'UPDATE',
+        description: `User status changed for ${user.email}: ${updatedUser.isActive ? 'active' : 'inactive'}`,
+    },
     });
 
     const { password: _, ...userWithoutPassword } = updatedUser;
     return userWithoutPassword;
 };
 
-// // ==================== ADMIN: GET AUDIT LOGS ====================
-// export const getAuditLogs = async (userId = null, page = 1, limit = 20) => {
-//     const skip = (page - 1) * limit;
-//     const where = userId ? { userId } : {};
+// ==================== ADMIN: GET AUDIT LOGS ====================
+export const getAuditLogs = async (userId = null, page = 1, limit = 20) => {
+    const skip = (page - 1) * limit;
 
-//     const [logs, total] = await Promise.all([
-//         prisma.auditLog.findMany({
-//             where,
-//             include: {
-//                 user: {
-//                     select: {
-//                         email: true,
-//                         fullName: true,
-//                     },
-//                 },
-//             },
-//             skip,
-//             take: limit,
-//             orderBy: { createdAt: 'desc' },
-//         }),
-//         prisma.auditLog.count({ where }),
-//     ]);
+    const where = userId ? { userId } : {};
 
-//     return {
-//         logs,
-//         pagination: {
-//             page,
-//             limit,
-//             total,
-//             totalPages: Math.ceil(total / limit),
-//         },
-//     };
-// };
+    const [logs, total] = await Promise.all([
+        prisma.auditLog.findMany({
+            where,
+            include: {
+                user: {
+                    select: {
+                        id: true,
+                        email: true,
+                        fullName: true,
+                    },
+                },
+            },
+            skip,
+            take: limit,
+            orderBy: {
+                createdAt: 'desc',
+            },
+        }),
+
+        prisma.auditLog.count({
+            where,
+        }),
+    ]);
+
+    return {
+        logs,
+        pagination: {
+            page,
+            limit,
+            total,
+            totalPages: Math.ceil(total / limit),
+        },
+    };
+};
