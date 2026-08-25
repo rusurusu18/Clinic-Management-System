@@ -373,8 +373,8 @@ export const getBillSummary = async (filters = {}) => {
         refundedCount,
     ] = await Promise.all([
         prisma.bill.count({ where }),
-        prisma.bill.aggregate({ where,                                  _sum: { totalAmount: true } }),
-        prisma.bill.aggregate({ where: { ...where, status: "UNPAID"        }, _sum: { totalAmount: true } }),
+         prisma.bill.aggregate({ where,                                  _sum: { totalAmount: true } }),   // aggregate functionused to calculate the total revenue from all bills in the specified date range.
+        prisma.bill.aggregate({ where: { ...where, status: "UNPAID"        }, _sum: { totalAmount: true } }),  //this line calculates the total unpaid amount from all bills in the specified date range.
         prisma.bill.aggregate({ where: { ...where, status: "PAID"          }, _sum: { totalAmount: true } }),
         prisma.bill.count({    where: { ...where, status: "PARTIALLY_PAID" } }),
         prisma.bill.count({    where: { ...where, status: "CANCELLED"      } }),
