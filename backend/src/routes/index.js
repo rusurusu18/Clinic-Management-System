@@ -6,7 +6,7 @@ import doctorRoutes from "../module/doctor/doctor.routes.js"
 import appointmentRoutes from "../module/appointment/appointment.routes.js"
 import departmentRoutes from "../module/department/department.routes.js"
 import medicalRecordRoutes from "../module/medicalRecord/medicalRecord.routes.js"
-
+import billingRoutes from "../module/billing/billing.routes.js"
 
 const router = express.Router();
 
@@ -23,5 +23,6 @@ router.use("/doctor",doctorRoutes)
 router.use("/appointment",appointmentRoutes)
 router.use("/department",departmentRoutes)
 router.use("/medical-record",medicalRecordRoutes)
+router.use("/billing",billingRoutes)
 
 export default router
