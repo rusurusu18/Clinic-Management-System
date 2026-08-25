@@ -54,27 +54,3 @@ export const rateDoctorSchema = z.object({
   rating: z.number().min(1).max(5, 'Rating must be between 1 and 5'),
   review: z.string().max(500, 'Review cannot exceed 500 characters').optional(),
 });
-
-// Validation middleware
-export const validate = (schema) => {
-  return async (req, res, next) => {
-    try {
-      const validatedData = await schema.parseAsync(req.body);
-      req.body = validatedData;
-      next();
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        const errors = error.errors.map(err => ({
-          field: err.path.join('.'),
-          message: err.message,
-        }));
-        return res.status(422).json({
-          success: false,
-          message: 'Validation failed',
-          errors,
-        });
-      }
-      next(error);
-    }
-  };
-};

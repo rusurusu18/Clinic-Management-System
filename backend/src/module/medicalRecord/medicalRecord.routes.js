@@ -1,123 +1,50 @@
-import { Router } from "express";
-
-import * as medicalRecordController from "./medicalRecord.controller.js";
-
-import {
-    verifyToken,
-    authorize,
-} from "../../middleware/authMiddleware.js";
+import { Router } from 'express';
+import * as medicalRecordController from './medicalRecord.controller.js';
+import { verifyToken, authorize } from '../../middleware/authMiddleware.js';
 
 const router = Router();
 
-// ============================================================
-// AUTHENTICATION
-// Protect all medical record routes
-// ============================================================
+// Protect all routes — JWT required
 router.use(verifyToken);
 
-// ============================================================
-// MEDICAL RECORDS
-// ============================================================
+// MEDICAL RECORDS 
 
-// Get patient's complete medical history
+// Get patient history
 router.get(
-    "/patient/:patientId/history",
-    authorize("ADMIN", "DOCTOR", "RECEPTIONIST"),
+    '/patient/:patientId/history',
+    authorize('ADMIN', 'DOCTOR', 'RECEPTIONIST'),
     medicalRecordController.getPatientMedicalHistory
 );
 
-// Base medical record routes
-router
-    .route("/")
-    .get(
-        authorize("ADMIN", "DOCTOR", "RECEPTIONIST"),
-        medicalRecordController.getAllMedicalRecords
-    )
-    .post(
-        authorize("ADMIN", "DOCTOR"),
-        medicalRecordController.createMedicalRecord
-    );
+// List / create medical records
+router.route('/')
+    .get(authorize('ADMIN', 'DOCTOR', 'RECEPTIONIST'), medicalRecordController.getAllMedicalRecords)
+    .post(authorize('ADMIN', 'DOCTOR'),                medicalRecordController.createMedicalRecord);
 
-// Individual medical record
-router
-    .route("/:id")
-    .get(
-        authorize("ADMIN", "DOCTOR", "RECEPTIONIST"),
-        medicalRecordController.getMedicalRecordById
-    )
-    .put(
-        authorize("ADMIN", "DOCTOR"),
-        medicalRecordController.updateMedicalRecord
-    )
-    .delete(
-        authorize("ADMIN"),
-        medicalRecordController.deleteMedicalRecord
-    );
+// Get / update / delete single medical record
+router.route('/:id')
+    .get(authorize('ADMIN', 'DOCTOR', 'RECEPTIONIST'), medicalRecordController.getMedicalRecordById)
+    .put(authorize('ADMIN', 'DOCTOR'),                 medicalRecordController.updateMedicalRecord)
+    .delete(authorize('ADMIN'),                        medicalRecordController.deleteMedicalRecord);
 
-// ============================================================
-// PRESCRIPTIONS
-// ============================================================
+// ==================== PRESCRIPTIONS ====================
 
-// Create prescription
-router
-    .route("/prescription")
-    .post(
-        authorize("ADMIN", "DOCTOR"),
-        medicalRecordController.createPrescription
-    );
+router.route('/prescription')
+    .post(authorize('ADMIN', 'DOCTOR'), medicalRecordController.createPrescription);
 
-// Individual prescription
-router
-    .route("/prescription/:id")
-    .get(
-        authorize(
-            "ADMIN",
-            "DOCTOR",
-            "RECEPTIONIST",
-            "PATIENT"
-        ),
-        medicalRecordController.getPrescriptionById
-    )
-    .put(
-        authorize("ADMIN", "DOCTOR"),
-        medicalRecordController.updatePrescription
-    )
-    .delete(
-        authorize("ADMIN", "DOCTOR"),
-        medicalRecordController.deletePrescription
-    );
+router.route('/prescription/:id')
+    .get(authorize('ADMIN', 'DOCTOR', 'RECEPTIONIST', 'PATIENT'), medicalRecordController.getPrescriptionById)
+    .put(authorize('ADMIN', 'DOCTOR'),                            medicalRecordController.updatePrescription)
+    .delete(authorize('ADMIN', 'DOCTOR'),                         medicalRecordController.deletePrescription);
 
-// ============================================================
-// REPORTS
-// ============================================================
+// ==================== REPORTS ====================
 
-// Create report
-router
-    .route("/report")
-    .post(
-        authorize("ADMIN", "DOCTOR"),
-        medicalRecordController.createReport
-    );
+router.route('/report')
+    .post(authorize('ADMIN', 'DOCTOR'), medicalRecordController.createReport);
 
-// Individual report
-router
-    .route("/report/:id")
-    .get(
-        authorize(
-            "ADMIN",
-            "DOCTOR",
-            "RECEPTIONIST",
-            "PATIENT"
-        ),
-        medicalRecordController.getReportById
-    )
-    .put(
-        authorize("ADMIN", "DOCTOR"),
-        medicalRecordController.updateReport
-    )
-    .delete(
-        authorize("ADMIN", "DOCTOR"),
-        medicalRecordController.deleteReport
-    );
+router.route('/report/:id')
+    .get(authorize('ADMIN', 'DOCTOR', 'RECEPTIONIST', 'PATIENT'), medicalRecordController.getReportById)
+    .put(authorize('ADMIN', 'DOCTOR'),                            medicalRecordController.updateReport)
+    .delete(authorize('ADMIN', 'DOCTOR'),                         medicalRecordController.deleteReport);
 
 export default router;
