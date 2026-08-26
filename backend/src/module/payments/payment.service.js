@@ -1,637 +1,348 @@
-import prisma from "../../config/database";
+import prisma from "../../config/database.js"
 
 
+// create payment
 
-// HELPER FUNCTIONS
+export const createPayment = async (paymentData) =>{
+    const{ billId, amount, method, transactionId, note } = paymentData; // Destructure the paymentData object to extract the required fields
 
-// Calculate the bill status based on its active/completed payments
-const calculateBillStatus = (totalAmount, totalPaid) => {
-    if (totalPaid <= 0) {
-        return "UNPAID";
-    }
-
-    if (totalPaid >= totalAmount) {
-        return "PAID";
-    }
-
-    return "PARTIALLY_PAID";
-};
-
-
-// Calculate total completed payments for a bill
-const calculateTotalPaid = (payments) => {
-    return payments
-        .filter((payment) => payment.status === "COMPLETED")
-        .reduce((sum, payment) => sum + payment.amount, 0);
-};
-
-
-// CREATE PAYMENT
-export const createPayment = async (paymentData) => {
-    const {
-        billId,
-        amount,
-        method,
-        transactionId,
-        note,
-    } = paymentData;
-
-    // Validate amount
-    if (amount === undefined || amount === null || amount <= 0) {
-        throw new Error("Payment amount must be greater than 0");
-    }
-
-    // Check if bill exists
+    // Check if the bill exists
     const bill = await prisma.bill.findUnique({
-        where: {
-            id: billId,
-        },
-        include: {
-            payments: true,
-        },
+        where: { id: billId },
+        include:{
+            payments:true, // Include the payments associated with the bill
+        }
     });
 
     if (!bill) {
         throw new Error("Bill not found");
     }
 
-    // Check bill status
-    if (bill.status === "CANCELLED") {
+    // check the amount bill is valid or not for the payment
+    if(bill.status === "CANCELLED"){
         throw new Error("Cannot make payment for a cancelled bill");
     }
-
-    if (bill.status === "REFUNDED") {
+    if(bill.status === "REFUNDED"){
         throw new Error("Cannot make payment for a refunded bill");
     }
 
-    if (bill.status === "PAID") {
+    if(bill.status === "PAID" ){
         throw new Error("Bill is already paid. Cannot make payment.");
+}
+
+
+// calculate the total amount paid for the bill
+    const totalPaid = bill.payments.reduce((sum, payment) => sum + payment.amount, 0);  // Calculate the total amount paid for the bill by summing up the amounts of all payments associated with the bill
+    const remainingAmount = bill.totalAmount - totalPaid;     2000 -1500
+
+    if(amount > remainingAmount){
+        throw new Error(`Payment amount exceeds the remaining bill amount. Remaining amount: ${remainingAmount}`);
     }
 
-    // Calculate total paid
-    const totalPaid = calculateTotalPaid(bill.payments);
+    // create the payment
+    const payment = await prisma.payment.create({
+        data:{
+            billId,
+            amount,
+            method,
+            transactionId,
+            note,
+            status: "COMPLETED", // Set the payment status to "COMPLETED" by default
+        },
+        include:{
+            bill:{
+                include:{
+                    patient:{
+                        include:{
+                            user:{
+                                select:{
+                                    fullName:true,
+                                    email:true,
+                                    phone:true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
 
-    // Calculate remaining amount
-    const remainingAmount = bill.totalAmount - totalPaid;
+    })
 
-    if (amount > remainingAmount) {
-        throw new Error(
-            `Payment amount exceeds the remaining bill amount. Remaining amount: ${remainingAmount}`
-        );
+    //update the bill status
+    const newTotalpaid =totalPaid + amount 
+    let newStatus = bill.status
+    if(newTotalpaid >= bill.totalAmount){
+        newStatus ="PAID"
+    }
+    else if(newTotalpaid>0){
+        newStatus = "PARTIALLY_PAID"
     }
 
-    // Use transaction so payment + bill update + audit log
-    // succeed or fail together
-    const payment = await prisma.$transaction(async (tx) => {
+    await prisma.bill.update({
+        where:{id:billId},
+        data:{
+            status:newStatus,
+            paymentDate:newStatus === "PAID"? new Date() :undefined,
+            paymentMethod:method,
+        }
+    })
 
-        // Create payment
-        const newPayment = await tx.payment.create({
-            data: {
-                billId,
-                amount,
-                method,
-                transactionId,
-                note,
-                status: "COMPLETED",
-            },
-            include: {
-                bill: {
-                    include: {
-                        patient: {
-                            include: {
-                                user: {
-                                    select: {
-                                        fullName: true,
-                                        email: true,
-                                        phone: true,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        });
-
-        // Calculate new paid amount
-        const newTotalPaid = totalPaid + amount;
-
-        // Calculate new bill status
-        const newStatus = calculateBillStatus(
-            bill.totalAmount,
-            newTotalPaid
-        );
-
-        // Update bill
-        await tx.bill.update({
-            where: {
-                id: billId,
-            },
-            data: {
-                status: newStatus,
-                paymentDate:
-                    newStatus === "PAID"
-                        ? new Date()
-                        : bill.paymentDate,
-                paymentMethod: method,
-            },
-        });
-
-        // Audit log
-        await tx.auditLog.create({
-            data: {
-                action: "CREATE_PAYMENT",
-                entityId: newPayment.id,
-                entityType: "PAYMENT",
-                description: `Payment of amount ${amount} created for bill ${billId}`,
-            },
-        });
-
-        return newPayment;
-    });
+    // create audit log
+    await prisma.auditLog.create({
+        data:{
+            action:"CREATE_PAYMENT",
+            entityId:payment.id,
+            entityType:"PAYMENT",
+            description:`Payment of amount ${amount} created for bill ${billId}`,
+        }
+    })
 
     return payment;
-};
+}
 
 
-// GET ALL PAYMENTS
-// Pagination + Filtering + Search
-export const getPayments = async (
-    page = 1,
-    limit = 10,
-    filter = {}
-) => {
-
-    const skip = (page - 1) * limit;
-
+// get all payments with pagination and filtering(dashboard)
+export const getPayments = async (page=1, limit=10, filter={}) => {
+    const skip = (page-1)* limit;
     const where = {};
 
-    // Filter by bill
-    if (filter.billId) {
+    if(filter.billId){
         where.billId = filter.billId;
     }
-
-    // Filter by payment status
-    if (filter.status) {
-        where.status = filter.status;
+    if(filters.status) where.status = filter.status;
+    if(filters.method) where.method = filter.method;
+    if(filters.fromDate ){
+        where.paymentDate = where.paymentDate = { gte: new Date(filter.fromDate) };
     }
-
-    // Filter by payment method
-    if (filter.method) {
-        where.method = filter.method;
+    if(filters.toDate){
+        where.paymentDate = where.paymentDate = { lte: new Date(filter.toDate) };
     }
-
-    // Filter by date range
-    if (filter.fromDate || filter.toDate) {
-
-        where.paymentDate = {};
-
-        if (filter.fromDate) {
-            where.paymentDate.gte = new Date(filter.fromDate);
-        }
-
-        if (filter.toDate) {
-
-            const toDate = new Date(filter.toDate);
-
-            // Include the complete day
-            toDate.setHours(23, 59, 59, 999);
-
-            where.paymentDate.lte = toDate;
-        }
-    }
-
-    // Filter by patient
-    if (filter.patientId) {
+    if(filters.patientId){
         where.bill = {
             patientId: filter.patientId,
-        };
+        }
     }
-
-    // Search
-    if (filter.search) {
+    if(filters.search){
         where.OR = [
-            {
-                transactionId: {
-                    contains: filter.search,
-                    mode: "insensitive",
-                },
-            },
-            {
-                note: {
-                    contains: filter.search,
-                    mode: "insensitive",
-                },
-            },
-        ];
+            { transactionId: { contains: filters.search, mode: "insensitive" } },
+            { note: { contains: filters.search, mode: "insensitive" } },
+        ]
     }
-
-    const [total, payments] = await Promise.all([
-
-        prisma.payment.count({
-            where,
-        }),
-
+    const [total, payments] = await Promise.all([  // it is ued to execute multiple asynchronous operations concurrently and wait for all of them to complete before proceeding. In this case, it is used to fetch the total count of payments and the list of payments based on the provided filters and pagination parameters.
+        prisma.payment.count({ where }),
         prisma.payment.findMany({
             where,
             skip,
             take: limit,
-
-            orderBy: {
-                paymentDate: "desc",
+            orderBy:{
+                paymentDate:"desc"
             },
-
-            include: {
-                bill: {
-                    include: {
-                        patient: {
-                            include: {
-                                user: {
-                                    select: {
-                                        fullName: true,
-                                        email: true,
-                                        phone: true,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        }),
-    ]);
+            include:{
+                bill:{
+                    include:{
+                        patient:{
+                            include:{
+                                user:{
+                                    select:{
+                                        fullName:true,
+                                        email:true,
+                                        phone:true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        })
+    ])
 
     return {
         total,
         page,
         limit,
-        totalPages: Math.ceil(total / limit),
-        payments,
-    };
-};
+        payments
+    }
 
 
-// GET PAYMENT BY ID
+}
+
+// get payment by id
 export const getPaymentById = async (paymentId) => {
 
     const payment = await prisma.payment.findUnique({
-        where: {
-            id: paymentId,
-        },
+        where:{ id:paymentId },
+        include:{
+            bill:{
+                include:{
+                    patient:{
+                        include:{
+                            user:{
+                                select:{
+                                    fullName:true,
+                                    email:true,
+                                    phone:true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    })
 
-        include: {
-            bill: {
-                include: {
-                    patient: {
-                        include: {
-                            user: {
-                                select: {
-                                    fullName: true,
-                                    email: true,
-                                    phone: true,
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        },
-    });
-
-    if (!payment) {
-        throw new Error("Payment not found");
+    if(!payment){
+        throw new Error("Payment not found")
     }
 
-    return payment;
-};
+    return payment
+}
 
-
-// GET PAYMENTS BY BILL
-export const getPaymentsByBill = async (
-    billId,
-    page = 1,
-    limit = 10
-) => {
-
-    const skip = (page - 1) * limit;
+// get payment by bill
+export const getPaymentByBillId = async (billId, page=1, limit=10) => {
+    const skip = (page-1)* limit;
 
     const [payments, total] = await Promise.all([
-
         prisma.payment.findMany({
-            where: {
-                billId,
+            where:{ billId },
+            include:{
+                bill:{
+                    include:{
+                        patient:{
+                            include:{
+                                user:{
+                                    select:{
+                                        fullName:true,
+                                        email:true,
+                                        phone:true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             },
-
-            include: {
-                bill: {
-                    include: {
-                        patient: {
-                            include: {
-                                user: {
-                                    select: {
-                                        fullName: true,
-                                        email: true,
-                                        phone: true,
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-
             skip,
-            take: limit,
-
-            orderBy: {
-                paymentDate: "desc",
-            },
+            take:limit,
+            orderBy:{
+                paymentDate:"desc"
+            }
         }),
 
         prisma.payment.count({
-            where: {
-                billId,
-            },
+            where:{ billId }
         }),
-    ]);
+    ])
 
     return {
         payments,
-
-        pagination: {
+        pagination:{
             page,
             limit,
             total,
-            totalPages: Math.ceil(total / limit),
-        },
-    };
-};
-
-
-
-// GET BILL PAYMENT STATUS
-export const getBillPaymentStatus = async (billId) => {
-
-    const bill = await prisma.bill.findUnique({
-        where: {
-            id: billId,
-        },
-
-        include: {
-            payments: true,
-
-            patient: {
-                include: {
-                    user: {
-                        select: {
-                            fullName: true,
-                            email: true,
-                            phone: true,
-                        },
-                    },
-                },
-            },
-        },
-    });
-
-    if (!bill) {
-        throw new Error("Bill not found");
+            totalPages: Math.ceil(total/limit)
+        }
     }
-
-    // Only COMPLETED payments count
-    const totalPaid = calculateTotalPaid(bill.payments);
-
-    const remainingAmount = Math.max(
-        bill.totalAmount - totalPaid,
-        0
-    );
-
-    const calculatedStatus = calculateBillStatus(
-        bill.totalAmount,
-        totalPaid
-    );
-
-    return {
-        billId: bill.id,
-
-        patient: bill.patient
-            ? {
-                  fullName: bill.patient.user?.fullName,
-                  email: bill.patient.user?.email,
-                  phone: bill.patient.user?.phone,
-              }
-            : null,
-
-        totalAmount: bill.totalAmount,
-
-        totalPaid,
-
-        remainingAmount,
-
-        status: bill.status,
-
-        calculatedStatus,
-
-        paymentCount: bill.payments.length,
-
-        completedPaymentCount: bill.payments.filter(
-            (payment) => payment.status === "COMPLETED"
-        ).length,
-
-        refundedPaymentCount: bill.payments.filter(
-            (payment) => payment.status === "REFUNDED"
-        ).length,
-
-        payments: bill.payments,
-    };
-};
+}
 
 
 
-// UPDATE PAYMENT
-export const updatePayment = async (
-    paymentId,
-    updateData
-) => {
-
+// update payment
+export const updatePayment = async (paymentId, updateData) =>{
     const existingPayment = await prisma.payment.findUnique({
-        where: {
-            id: paymentId,
-        },
+        where:{ id: paymentId },
+        include:{
+            bill:true
+        }
+    })
 
-        include: {
-            bill: {
-                include: {
-                    payments: true,
-                },
-            },
-        },
-    });
-
-    if (!existingPayment) {
+    if(!existingPayment){
         throw new Error("Payment not found");
     }
-
-    // Cannot update refunded payment
-    if (existingPayment.status === "REFUNDED") {
+    // check if payment can be updated 
+    if(existingPayment.status === "REFUNDED"){
         throw new Error("Cannot update a refunded payment");
     }
 
-    // Validate new amount
-    if (
-        updateData.amount !== undefined &&
-        updateData.amount !== null &&
-        updateData.amount <= 0
-    ) {
-        throw new Error("Payment amount must be greater than 0");
-    }
-
-    // If amount is being updated
-    if (
-        updateData.amount !== undefined &&
-        updateData.amount !== existingPayment.amount
-    ) {
-
-        const bill = existingPayment.bill;
-
-        // Current completed payments excluding this payment
-        const totalPaidWithoutCurrentPayment =
-            bill.payments
-                .filter(
-                    (payment) =>
-                        payment.status === "COMPLETED" &&
-                        payment.id !== paymentId
-                )
-                .reduce(
-                    (sum, payment) => sum + payment.amount,
-                    0
-                );
-
-        const remainingAmount =
-            bill.totalAmount - totalPaidWithoutCurrentPayment;
-
-        if (updateData.amount > remainingAmount) {
-            throw new Error(
-                `Updated payment amount exceeds the remaining bill amount. Remaining amount: ${remainingAmount}`
-            );
-        }
-
-        const newTotalPaid =
-            totalPaidWithoutCurrentPayment +
-            updateData.amount;
-
-        const newStatus = calculateBillStatus(
-            bill.totalAmount,
-            newTotalPaid
-        );
-
-        const updatedPayment = await prisma.$transaction(
-            async (tx) => {
-
-                const payment = await tx.payment.update({
-                    where: {
-                        id: paymentId,
-                    },
-
-                    data: updateData,
-
-                    include: {
-                        bill: {
-                            include: {
-                                patient: {
-                                    include: {
-                                        user: {
-                                            select: {
-                                                fullName: true,
-                                                email: true,
-                                                phone: true,
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                });
-
-                await tx.bill.update({
-                    where: {
-                        id: bill.id,
-                    },
-
-                    data: {
-                        status: newStatus,
-
-                        paymentDate:
-                            newStatus === "PAID"
-                                ? new Date()
-                                : bill.paymentDate,
-                    },
-                });
-
-                await tx.auditLog.create({
-                    data: {
-                        action: "UPDATE_PAYMENT",
-                        entityId: payment.id,
-                        entityType: "PAYMENT",
-                        description: `Payment ${paymentId} updated`,
-                    },
-                });
-
-                return payment;
+    // if the amount is being updated, check if the new amount is valid
+    if(updateData.amount && updateData.amount !== existingPayment.amount){
+        const bill = await prisma.bill.findUnique({
+            where:{ id: existingPayment.billId },
+            include:{
+                payments:true
             }
-        );
+        })
+        const totalPaid = bill.payments.reduce((sum, payment) => sum + payment.amount, 0) - existingPayment.amount;  250 
+        const remainingAmount = bill.totalAmount - totalPaid;  // baki rahyo 
+        if(updateData.amount > remainingAmount){
+            throw new Error(`Updated payment amount exceeds the remaining bill amount. Remaining amount: ${remainingAmount}`);
+        }
 
-        return updatedPayment;
+        //update bill status if payment amount chnages 
+        let newStatus = bill.status;
+        if(totalPaid >= bill.totalAmount){   1000 >= 1000 
+            newStatus = "PAID";
+        }
+        
+        else if(totalPaid > 0 ){   // 1000-900 =100
+            newStatus = "PARTIALLY_PAID";
+        }
+        else{
+            newStatus = "UNPAID";
+        }
+
+        await prisma.bill.update({
+            where:{ id: bill.id },
+            data:{
+                status:newStatus,
+            
+    }
+})
     }
 
-    // Update payment when amount is NOT changed
-    const updatedPayment = await prisma.$transaction(
-        async (tx) => {
 
-            const payment = await tx.payment.update({
-                where: {
-                    id: paymentId,
-                },
+    const updatedPayment = await prisma.payment.update({    
+        where:{
+            id: paymentId
+        },
+        data:updataData,
+        include:{
+            bill:{
+                include:{
+                    patient:{
+                        include:{
+                            user:{
+                                select:{
+                                    fullName:true,
+                                    email:true,
+                                    phone:true      
 
-                data: updateData,
+                }
 
-                include: {
-                    bill: {
-                        include: {
-                            patient: {
-                                include: {
-                                    user: {
-                                        select: {
-                                            fullName: true,
-                                            email: true,
-                                            phone: true,
-                                        },
-                                    },
-                                },
-                            },
-                        },
-                    },
-                },
-            });
-
-            await tx.auditLog.create({
-                data: {
-                    action: "UPDATE_PAYMENT",
-                    entityId: payment.id,
-                    entityType: "PAYMENT",
-                    description: `Payment ${paymentId} updated`,
-                },
-            });
-
-            return payment;
+            }
         }
-    );
-
-    return updatedPayment;
-};
+    }
+}}}
 
 
+})
+
+// create audit log
+ await prisma.auditLog.create({
+    data:{
+        action:"UPDATE_PAYMENT",
+        entityId:updatedPayment.id,
+        entityType:"PAYMENT",
+        description:`Payment ${paymentId} updated`,
+    }       
+}
+)
+
+return updatedPayment;
+
+}
 
 // REFUND PAYMENT
 export const refundPayment = async (
