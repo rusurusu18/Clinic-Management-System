@@ -54,4 +54,5 @@ export const ENV = {
 
   RESEND_OTP_RATE_LIMIT_MAX:
     parseInt(process.env.RESEND_OTP_RATE_LIMIT_MAX) || 3,
+    Cloud_Name:process.env.Cloud_Name
 };
