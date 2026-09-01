@@ -43,6 +43,24 @@ export const uploadMulterToCloudinary =async (files,options={})=>{
     }
 }
 
-//delete file from cloudinary 
+// Delete file from Cloudinary
+export const deleteFromCloudinary = async (publicId) => {
+  try {
+    const result = await cloudinary.uploader.destroy(publicId);
+    return result;
+  } catch (error) {
+    console.error('Cloudinary delete error:', error);
+    throw new Error('Failed to delete from Cloudinary');
+  }
+};
 
-//get cloudinary url
+// Get Cloudinary URL
+export const getCloudinaryUrl = (publicId, options = {}) => {
+  return cloudinary.url(publicId, {
+    secure: true,
+    ...options,
+  });
+};
+
+
+export default cloudinary;

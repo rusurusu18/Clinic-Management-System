@@ -1,8 +1,10 @@
 import prisma from "../../config/database.js";
 import { MESSAGES } from "../../constants/message.js";
+import {uploadMultipleToCloudinaryFn, deleteFromCloudinaryFn} from "../../config/multer.js";
+
 
 // ==================== CREATE DOCTOR ====================
-export const createDoctor = async (doctorData) => {
+export const createDoctor = async (doctorData, files = {}) => {
   const { userId, ...data } = doctorData;
 
   // Check if user exists
@@ -32,6 +34,12 @@ export const createDoctor = async (doctorData) => {
     throw new Error('User is already registered as a patient');
   }
 
+  //upload documennt to cloudinary 
+  let uploadedFiles = [];
+  if (files && files.length > 0) {  // Check if files are provided and not empty
+    uploadedFiles = await uploadMultipleToCloudinaryFn(files);
+  }
+
   // Check if license number is unique
   if (data.licenseNumber) {
     const existingLicense = await prisma.doctor.findUnique({
@@ -50,6 +58,7 @@ export const createDoctor = async (doctorData) => {
       ...data,
       qualifications: data.qualifications || [],
       availableDays: data.availableDays || [],
+      documents:uploadedFiles,
     },
     include: {
       user: {
@@ -61,6 +70,7 @@ export const createDoctor = async (doctorData) => {
           role: true,
           isActive: true,
           isEmailVerified: true,
+          documents:uploadedFiles.length
         },
       },
     },
@@ -256,7 +266,7 @@ export const getDoctorByUserId = async (userId) => {
 };
 
 // ==================== UPDATE DOCTOR ====================
-export const updateDoctor = async (doctorId, updateData) => {
+export const updateDoctor = async (doctorId, updateData,files) => {
   // Check if doctor exists
   const existingDoctor = await prisma.doctor.findUnique({
     where: { id: doctorId },
@@ -276,6 +286,26 @@ export const updateDoctor = async (doctorId, updateData) => {
       throw new Error('License number already exists');
     }
   }
+
+   // uploaded new documents to cloudinary 
+let uploadedDocuments = [];
+if(files && files.length > 0){
+  uploadedDocuments = await uploadMultipleToCloudinaryFn(files,'healthcare/doctors');
+}
+// merge existing documents with newly uploaded documents
+const existingDcouments = existingPatient.documents || [];
+const allDocuments = [...existingDcouments, ...uploadedDocuments]; // Merge existing and newly uploaded documents
+// if documents are removed, delete them from cloudinary
+if(updatedData.removeDocuments){
+  const removeDocPublicIds = updatedData.removeDocuments; // Array of public IDs to remove
+  const remainingDocuments = allDocuments.filter(doc => !removeDocPublicIds.includes(doc.publicId)); // Filter out documents to be removed
+  // Delete documents from cloudinary
+  for(const publicId of removeDocPublicIds){
+    await deleteFromCloudinaryFn(publicId);
+  }
+  updatedData.documents = remainingDocuments; // Update documents field with remaining documents
+
+}
 
   const doctor = await prisma.doctor.update({
     where: { id: doctorId },
@@ -301,6 +331,7 @@ export const updateDoctor = async (doctorId, updateData) => {
       userId: doctor.userId,
       action: 'UPDATE',
       description: `Doctor profile updated with ID: ${doctor.id}`,
+      documents: doctor.documents ? doctor.documents.length : 0,
     },
   });
 
@@ -320,6 +351,13 @@ export const deleteDoctor = async (doctorId) => {
     throw new Error('Doctor not found');
   }
 
+  // delete all doctor documents from cloudinary
+if(doctor.documents){
+  for (const doc of doctor.documents){
+    await deleteFromCloudinaryFn(doc.publicId);
+  }
+}
+
   // Delete all related records
   await prisma.$transaction([
     prisma.appointment.deleteMany({
@@ -336,6 +374,7 @@ export const deleteDoctor = async (doctorId) => {
       userId: doctor.userId,
       action: 'DELETE',
       description: `Doctor profile deleted with ID: ${doctor.id}`,
+      documents: doctor.documents ? doctor.documents.length : 0,
     },
   });
 

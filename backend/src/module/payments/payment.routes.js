@@ -3,7 +3,7 @@ import * as paymentController from './payment.controller.js';
 import{paymentSchema, getPaymentQuerySchema,updatePaymentSchema,refundPaymentSchema} from './payment.schema.js';
 import { validate } from '../../middleware/validateMiddleware.js';
 import {verifyToken,authorize} from '../../middleware/authMiddleware.js';
-import { ROLES } from '../../constans/roles.js';
+import { ROLES } from '../../constants/roles.js';
 const router = express.Router();
 router.use(verifyToken); // Apply verifyToken middleware to all routes
 
