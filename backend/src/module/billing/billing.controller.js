@@ -6,7 +6,7 @@ import {
     notFoundResponse,
     serverErrorResponse,
 } from "../../utils/response.js";
-import { STATUS_CODES } from "../../constans/statusCodes.js";
+import { STATUS_CODES } from "../../constants/statusCodes.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GENERATE BILL
