@@ -1,6 +1,8 @@
 import express from "express";
 import * as authController from "./auth.controller.js";
 import { verifyToken } from "../../middleware/authMiddleware.js";
+import { uploadAvatar } from '../../config/multer.js';
+import { handleMulterError } from '../../middleware/multerMiddleware.js';
 
 const router = express.Router();
 
@@ -22,9 +24,23 @@ router.post("/refresh-token", authController.refreshToken);
 // Protected Routes
 router.use(verifyToken);
 
-router.post("/logout", authController.logout);
-router.get("/profile", authController.getProfile);
-router.put("/profile", authController.updateProfile);
-router.post("/change-password", authController.changePassword);
+router.post('/logout', authController.logout);
+router.get('/profile', authController.getProfile);
 
-export default router;
+// Profile update — supports optional avatar upload
+router.put(
+  '/profile',
+  uploadAvatar,
+  handleMulterError,
+  authController.updateProfile
+);
+
+router.post('/change-password', authController.changePassword);
+
+// Avatar upload (dedicated endpoint)
+router.post(
+  '/profile/avatar',
+  uploadAvatar,
+  handleMulterError,
+  authController.uploadAvatar
+);

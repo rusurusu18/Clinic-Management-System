@@ -10,6 +10,7 @@ import {
     serverErrorResponse,
     handleZodError
 } from '../../utils/response.js';
+import { uploadToCloudinarySingle, deleteFromCloudinaryFn } from '../../config/multer.js';
 import { setAccessTokenCookie, setRefreshTokenCookie, clearTokens } from '../../utils/cookie.js';
 import { 
     registerSchema, 
@@ -309,9 +310,21 @@ export const updateProfile = async (req, res) => {
         const validatedData = await updateProfileSchema.parseAsync(req.body);
         const userId = req.user.id;
         
-        const user = await authService.updateUserProfile(userId, validatedData);
-        
+        // Handle avatar upload if file present
+        let avatarData = null;
+        if (req.file) {
+            avatarData = await uploadToCloudinarySingle(req.file, 'healthcare/avatars');
+        }
+
+        const updatePayload = {
+            ...validatedData,
+            ...(avatarData && { avatar: avatarData.url }),
+        };
+
+        const user = await authService.updateUserProfile(userId, updatePayload);
+
         return successResponse(res, user, MESSAGES.PROFILE_UPDATED);
+    
     } catch (error) {
         console.error('Update profile error:', error);
         
@@ -329,6 +342,40 @@ export const updateProfile = async (req, res) => {
         return errorResponse(res, error.message || 'Failed to update profile');
     }
 };
+
+// Upload / Replace Avatar
+export const uploadAvatar = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        if (!req.file) {
+            return errorResponse(res, 'No avatar file provided', 400);
+        }
+
+        // Get current user to delete old avatar
+        const currentUser = await authService.getUserProfile(userId);
+        if (currentUser.avatar) {
+            // Try to extract public_id from old avatar URL and delete it
+            try {
+                const urlParts = currentUser.avatar.split('/');
+                const publicIdWithExt = urlParts.slice(-2).join('/');
+                const publicId = publicIdWithExt.split('.')[0];
+                await deleteFromCloudinaryFn(publicId);
+            } catch (e) {
+                console.error('Could not delete old avatar:', e.message);
+            }
+        }
+
+        const avatarData = await uploadToCloudinarySingle(req.file, 'healthcare/avatars');
+        const user = await authService.updateUserProfile(userId, { avatar: avatarData.url });
+
+        return successResponse(res, { avatar: avatarData.url, user }, 'Avatar updated successfully');
+    } catch (error) {
+        console.error('Upload avatar error:', error);
+        return errorResponse(res, error.message || 'Failed to upload avatar');
+    }
+};
+
 
 // ==================== ADMIN CONTROLLERS ====================
 
