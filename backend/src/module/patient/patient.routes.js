@@ -1,64 +1,64 @@
-import express from "express";
-
-import * as patientController from "./patient.controller.js";
-import { authorize, verifyToken } from "../../middleware/authMiddleware.js";
-import {createPatientSchema, updatePatientSchema} from "./patient.schema.js";
-import { ROLES } from "../../constants/roles.js";
-import { validate } from "../../middleware/validateMiddleware.js";
+import express from 'express';
+import * as patientController from './patient.controller.js';
+import { authorize, verifyToken } from '../../middleware/authMiddleware.js';
+import { validate } from '../../middleware/validateMiddleware.js';
+import { createPatientSchema, updatePatientSchema } from './patient.schema.js';
+import { ROLES } from '../../constants/roles.js';
+import { uploadMultiple } from '../../config/multer.js';
+import { handleMulterError } from '../../middleware/multerMiddleware.js';
 
 const router = express.Router();
 
 // All routes require authentication
 router.use(verifyToken);
 
-// Create patient
+// ==================== PATIENT ROUTES ====================
+
+// Create patient profile (with optional document uploads)
 router.post(
-    "/",
-    validate(createPatientSchema),
-    authorize(ROLES.PATIENT, ROLES.RECEPTIONIST),
-    patientController.createPatient
+  '/',
+  authorize(ROLES.PATIENT, ROLES.RECEPTIONIST, ROLES.ADMIN),
+  uploadMultiple,
+  handleMulterError,
+  validate(createPatientSchema),
+  patientController.createPatient
 );
 
-// Get all patients with pagination
+// Get all patients (admin/doctor/receptionist)
 router.get(
-    "/",
-    authorize(ROLES.ADMIN, ROLES.DOCTOR, ROLES.RECEPTIONIST),
-    patientController.getAllPatients
+  '/',
+  authorize(ROLES.ADMIN, ROLES.DOCTOR, ROLES.RECEPTIONIST),
+  patientController.getAllPatients
 );
 
-// Get current user's profile
-router.get(
-    "/me",
-    patientController.getPatientByUserId
-);
+// Get current user's own patient profile
+router.get('/me', patientController.getPatientByUserId);
 
 // Get patient by ID
 router.get(
-    "/:id",
-    authorize(ROLES.ADMIN, ROLES.DOCTOR, ROLES.RECEPTIONIST),
-    patientController.getPatientById
+  '/:id',
+  authorize(ROLES.ADMIN, ROLES.DOCTOR, ROLES.RECEPTIONIST),
+  patientController.getPatientById
 );
 
-// Update patient
+// Update patient (with optional new document uploads + removal)
 router.put(
-    "/:id",
-    validate(updatePatientSchema),
-    authorize(ROLES.RECEPTIONIST, ROLES.PATIENT),
-    patientController.updatePatient
+  '/:id',
+  authorize(ROLES.PATIENT, ROLES.RECEPTIONIST, ROLES.ADMIN),
+  uploadMultiple,
+  handleMulterError,
+  validate(updatePatientSchema),
+  patientController.updatePatient
 );
 
-// Delete patient
-router.delete(
-    "/:id",
-    authorize(ROLES.ADMIN),
-    patientController.deletePatient
-);
+// Delete patient (admin only)
+router.delete('/:id', authorize(ROLES.ADMIN), patientController.deletePatient);
 
-// Get patient statistics
+// Get patient appointment statistics
 router.get(
-    "/:id/statistics",
-    authorize(ROLES.ADMIN, ROLES.RECEPTIONIST, ROLES.DOCTOR),
-    patientController.getPatientStatistics
+  '/:id/statistics',
+  authorize(ROLES.ADMIN, ROLES.DOCTOR, ROLES.RECEPTIONIST),
+  patientController.getPatientStatistics
 );
 
 export default router;

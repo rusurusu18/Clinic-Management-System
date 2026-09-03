@@ -1,95 +1,77 @@
-import prisma from "../../config/database.js";
-import { MESSAGES } from "../../constants/message.js";
-import {uploadMultipleToCloudinaryFn, deleteFromCloudinaryFn} from "../../config/multer.js";
-
+import prisma from '../../config/database.js';
+import {
+  uploadToCloudinarySingle,
+  uploadMultipleToCloudinaryFn,
+  deleteFromCloudinaryFn,
+  deleteMultipleFromCloudinary,
+} from '../../config/multer.js';
 
 // ==================== CREATE DOCTOR ====================
+/**
+ * @param {object} doctorData
+ * @param {object} files - req.files from uploadFields: { profilePicture: [], certificates: [] }
+ */
 export const createDoctor = async (doctorData, files = {}) => {
   const { userId, ...data } = doctorData;
 
-  // Check if user exists
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-  });
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) throw new Error('User not found');
 
-  if (!user) {
-    throw new Error('User not found');
-  }
+  const existingDoctor = await prisma.doctor.findUnique({ where: { userId } });
+  if (existingDoctor) throw new Error('Doctor profile already exists for this user');
 
-  // Check if user already has a doctor profile
-  const existingDoctor = await prisma.doctor.findUnique({
-    where: { userId },
-  });
+  const existingPatient = await prisma.patient.findUnique({ where: { userId } });
+  if (existingPatient) throw new Error('User is already registered as a patient');
 
-  if (existingDoctor) {
-    throw new Error('Doctor profile already exists for this user');
-  }
-
-  // Check if user is already a patient
-  const existingPatient = await prisma.patient.findUnique({
-    where: { userId },
-  });
-
-  if (existingPatient) {
-    throw new Error('User is already registered as a patient');
-  }
-
-  //upload documennt to cloudinary 
-  let uploadedFiles = [];
-  if (files && files.length > 0) {  // Check if files are provided and not empty
-    uploadedFiles = await uploadMultipleToCloudinaryFn(files);
-  }
-
-  // Check if license number is unique
   if (data.licenseNumber) {
-    const existingLicense = await prisma.doctor.findUnique({
-      where: { licenseNumber: data.licenseNumber },
-    });
-
-    if (existingLicense) {
-      throw new Error('License number already exists');
-    }
+    const existingLicense = await prisma.doctor.findUnique({ where: { licenseNumber: data.licenseNumber } });
+    if (existingLicense) throw new Error('License number already exists');
   }
 
-  // Create doctor
+  // Upload profile picture (single, from 'profilePicture' or 'avatar' field)
+  let profilePictureUrl = null;
+  const profileFile = files?.profilePicture?.[0] || files?.avatar?.[0];
+  if (profileFile) {
+    const profileResult = await uploadToCloudinarySingle(profileFile, 'healthcare/doctors/profile');
+    profilePictureUrl = profileResult.url;
+
+    // Also update the User avatar
+    await prisma.user.update({ where: { id: userId }, data: { avatar: profilePictureUrl } });
+  }
+
+  // Upload certificates (multiple files from 'certificates' field)
+  let uploadedCertificates = [];
+  if (files?.certificates && files.certificates.length > 0) {
+    uploadedCertificates = await uploadMultipleToCloudinaryFn(files.certificates, 'healthcare/doctors/certificates');
+  }
+
   const doctor = await prisma.doctor.create({
     data: {
       userId,
       ...data,
       qualifications: data.qualifications || [],
       availableDays: data.availableDays || [],
-      documents:uploadedFiles,
+      certificates: uploadedCertificates,
     },
     include: {
       user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          phone: true,
-          role: true,
-          isActive: true,
-          isEmailVerified: true,
-          documents:uploadedFiles.length
-        },
+        select: { id: true, fullName: true, email: true, phone: true, role: true, isActive: true, avatar: true },
       },
     },
   });
 
-  // Update user role if not already DOCTOR
+  // Ensure user role is DOCTOR
   if (user.role !== 'DOCTOR') {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { role: 'DOCTOR' },
-    });
+    await prisma.user.update({ where: { id: userId }, data: { role: 'DOCTOR' } });
   }
 
-  // Create audit log
+  // Audit log
   await prisma.auditLog.create({
     data: {
-      userId: userId,
+      userId,
       action: 'CREATE',
-      description: `Doctor profile created with ID: ${doctor.id}`,
+      resource: 'Doctor',
+      details: { doctorId: doctor.id, certificatesUploaded: uploadedCertificates.length },
     },
   });
 
@@ -97,86 +79,50 @@ export const createDoctor = async (doctorData, files = {}) => {
 };
 
 // ==================== GET ALL DOCTORS ====================
-export const getAllDoctors = async (page = 1, limit = 10, search = null, specialization = null, hospital = null, minRating = null) => {
-  const skip = (page - 1) * limit;   // 1-1 10 = 0 2-1 *10 = 10
-
+export const getAllDoctors = async (
+  page = 1,
+  limit = 10,
+  search = null,
+  specialization = null,
+  hospital = null,
+  minRating = null
+) => {
+  const skip = (page - 1) * limit;
   const where = {};
+
   if (search) {
     where.OR = [
       { user: { fullName: { contains: search } } },
       { user: { email: { contains: search } } },
-      { user: { phone: { contains: search } } },
       { specialization: { contains: search } },
       { hospital: { contains: search } },
     ];
   }
-  if (specialization) {
-    where.specialization = { contains: specialization };
-  }
-  if (hospital) {
-    where.hospital = { contains: hospital };
-  }
-  if (minRating) {
-    where.rating = { gte: minRating };
-  }
+  if (specialization) where.specialization = { contains: specialization };
+  if (hospital) where.hospital = { contains: hospital };
+  if (minRating) where.rating = { gte: minRating };
 
   const [doctors, total] = await Promise.all([
     prisma.doctor.findMany({
       where,
       include: {
         user: {
-          select: {
-            id: true,
-            fullName: true,
-            email: true,
-            phone: true,
-            role: true,
-            isActive: true,
-            isEmailVerified: true,
-            createdAt: true,
-          },
+          select: { id: true, fullName: true, email: true, phone: true, role: true, isActive: true, avatar: true, createdAt: true },
         },
+        department: { select: { id: true, name: true } },
         appointments: {
-          where: {
-            status: {
-              in: ['SCHEDULED', 'CONFIRMED'],
-            },
-            date: {
-              gte: new Date(),
-            },
-          },
-          include: {
-            patient: {
-              include: {
-                user: {
-                  select: {
-                    fullName: true,
-                  },
-                },
-              },
-            },
-          },
+          where: { status: { in: ['SCHEDULED', 'CONFIRMED'] }, date: { gte: new Date() } },
+          select: { id: true, date: true, status: true },
         },
       },
       skip,
       take: limit,
-      orderBy: [
-        { rating: 'desc' },
-        { createdAt: 'desc' },
-      ],
+      orderBy: [{ rating: 'desc' }, { createdAt: 'desc' }],
     }),
     prisma.doctor.count({ where }),
   ]);
 
-  return {
-    doctors,
-    pagination: {
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-    },
-  };
+  return { doctors, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
 };
 
 // ==================== GET DOCTOR BY ID ====================
@@ -185,40 +131,17 @@ export const getDoctorById = async (doctorId) => {
     where: { id: doctorId },
     include: {
       user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          phone: true,
-          role: true,
-          isActive: true,
-          isEmailVerified: true,
-          createdAt: true,
-        },
+        select: { id: true, fullName: true, email: true, phone: true, role: true, isActive: true, avatar: true, createdAt: true },
       },
+      department: { select: { id: true, name: true } },
       appointments: {
-        include: {
-          patient: {
-            include: {
-              user: {
-                select: {
-                  fullName: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: {
-          date: 'desc',
-        },
+        include: { patient: { include: { user: { select: { fullName: true } } } } },
+        orderBy: { date: 'desc' },
       },
     },
   });
 
-  if (!doctor) {
-    throw new Error('Doctor not found');
-  }
-
+  if (!doctor) throw new Error('Doctor not found');
   return doctor;
 };
 
@@ -228,110 +151,80 @@ export const getDoctorByUserId = async (userId) => {
     where: { userId },
     include: {
       user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          phone: true,
-          role: true,
-          isActive: true,
-          isEmailVerified: true,
-          createdAt: true,
-        },
+        select: { id: true, fullName: true, email: true, phone: true, role: true, isActive: true, avatar: true, createdAt: true },
       },
-      appointments: {
-        include: {
-          patient: {
-            include: {
-              user: {
-                select: {
-                  fullName: true,
-                },
-              },
-            },
-          },
-        },
-        orderBy: {
-          date: 'desc',
-        },
-      },
+      department: { select: { id: true, name: true } },
     },
   });
 
-  if (!doctor) {
-    throw new Error('Doctor not found for this user');
-  }
-
+  if (!doctor) throw new Error('Doctor not found for this user');
   return doctor;
 };
 
 // ==================== UPDATE DOCTOR ====================
-export const updateDoctor = async (doctorId, updateData,files) => {
-  // Check if doctor exists
-  const existingDoctor = await prisma.doctor.findUnique({
-    where: { id: doctorId },
-  });
+/**
+ * @param {string} doctorId
+ * @param {object} updateData
+ * @param {object} files - req.files from uploadFields: { profilePicture: [], certificates: [] }
+ */
+export const updateDoctor = async (doctorId, updateData, files = {}) => {
+  const existingDoctor = await prisma.doctor.findUnique({ where: { id: doctorId } });
+  if (!existingDoctor) throw new Error('Doctor not found');
 
-  if (!existingDoctor) {
-    throw new Error('Doctor not found');
-  }
-
-  // Check if license number is unique (if being updated)
   if (updateData.licenseNumber && updateData.licenseNumber !== existingDoctor.licenseNumber) {
-    const existingLicense = await prisma.doctor.findUnique({
-      where: { licenseNumber: updateData.licenseNumber },
-    });
+    const existingLicense = await prisma.doctor.findUnique({ where: { licenseNumber: updateData.licenseNumber } });
+    if (existingLicense) throw new Error('License number already exists');
+  }
 
-    if (existingLicense) {
-      throw new Error('License number already exists');
+  // Handle profile picture upload
+  const profileFile = files?.profilePicture?.[0] || files?.avatar?.[0];
+  if (profileFile) {
+    const profileResult = await uploadToCloudinarySingle(profileFile, 'healthcare/doctors/profile');
+    // Also update the User's avatar field
+    await prisma.user.update({ where: { id: existingDoctor.userId }, data: { avatar: profileResult.url } });
+  }
+
+  // Handle certificate uploads
+  let uploadedCertificates = [];
+  if (files?.certificates && files.certificates.length > 0) {
+    uploadedCertificates = await uploadMultipleToCloudinaryFn(files.certificates, 'healthcare/doctors/certificates');
+  }
+
+  // Merge certificates
+  const existingCertificates = Array.isArray(existingDoctor.certificates) ? existingDoctor.certificates : [];
+  let allCertificates = [...existingCertificates, ...uploadedCertificates];
+
+  // Handle certificate removals
+  if (updateData.removeDocuments) {
+    let removeIds = updateData.removeDocuments;
+    if (typeof removeIds === 'string') {
+      try { removeIds = JSON.parse(removeIds); } catch { removeIds = removeIds.split(',').map((s) => s.trim()); }
     }
+    allCertificates = allCertificates.filter((cert) => !removeIds.includes(cert.publicId));
+    await deleteMultipleFromCloudinary(removeIds);
   }
+  delete updateData.removeDocuments;
 
-   // uploaded new documents to cloudinary 
-let uploadedDocuments = [];
-if(files && files.length > 0){
-  uploadedDocuments = await uploadMultipleToCloudinaryFn(files,'healthcare/doctors');
-}
-// merge existing documents with newly uploaded documents
-const existingDcouments = existingPatient.documents || [];
-const allDocuments = [...existingDcouments, ...uploadedDocuments]; // Merge existing and newly uploaded documents
-// if documents are removed, delete them from cloudinary
-if(updatedData.removeDocuments){
-  const removeDocPublicIds = updatedData.removeDocuments; // Array of public IDs to remove
-  const remainingDocuments = allDocuments.filter(doc => !removeDocPublicIds.includes(doc.publicId)); // Filter out documents to be removed
-  // Delete documents from cloudinary
-  for(const publicId of removeDocPublicIds){
-    await deleteFromCloudinaryFn(publicId);
+  if (uploadedCertificates.length > 0 || files?.certificates) {
+    updateData.certificates = allCertificates;
   }
-  updatedData.documents = remainingDocuments; // Update documents field with remaining documents
-
-}
 
   const doctor = await prisma.doctor.update({
     where: { id: doctorId },
     data: updateData,
     include: {
       user: {
-        select: {
-          id: true,
-          fullName: true,
-          email: true,
-          phone: true,
-          role: true,
-          isActive: true,
-          isEmailVerified: true,
-        },
+        select: { id: true, fullName: true, email: true, phone: true, role: true, isActive: true, avatar: true },
       },
     },
   });
 
-  // Create audit log
   await prisma.auditLog.create({
     data: {
       userId: doctor.userId,
       action: 'UPDATE',
-      description: `Doctor profile updated with ID: ${doctor.id}`,
-      documents: doctor.documents ? doctor.documents.length : 0,
+      resource: 'Doctor',
+      details: { doctorId: doctor.id, newCertificatesUploaded: uploadedCertificates.length },
     },
   });
 
@@ -342,39 +235,28 @@ if(updatedData.removeDocuments){
 export const deleteDoctor = async (doctorId) => {
   const doctor = await prisma.doctor.findUnique({
     where: { id: doctorId },
-    include: {
-      appointments: true,
-    },
+    include: { appointments: true },
   });
 
-  if (!doctor) {
-    throw new Error('Doctor not found');
+  if (!doctor) throw new Error('Doctor not found');
+
+  // Delete all certificates from Cloudinary
+  if (Array.isArray(doctor.certificates) && doctor.certificates.length > 0) {
+    const publicIds = doctor.certificates.map((c) => c.publicId).filter(Boolean);
+    await deleteMultipleFromCloudinary(publicIds);
   }
 
-  // delete all doctor documents from cloudinary
-if(doctor.documents){
-  for (const doc of doctor.documents){
-    await deleteFromCloudinaryFn(doc.publicId);
-  }
-}
-
-  // Delete all related records
   await prisma.$transaction([
-    prisma.appointment.deleteMany({
-      where: { doctorId },
-    }),
-    prisma.doctor.delete({
-      where: { id: doctorId },
-    }),
+    prisma.appointment.deleteMany({ where: { doctorId } }),
+    prisma.doctor.delete({ where: { id: doctorId } }),
   ]);
 
-  // Create audit log
   await prisma.auditLog.create({
     data: {
       userId: doctor.userId,
       action: 'DELETE',
-      description: `Doctor profile deleted with ID: ${doctor.id}`,
-      documents: doctor.documents ? doctor.documents.length : 0,
+      resource: 'Doctor',
+      details: { doctorId },
     },
   });
 
@@ -383,62 +265,35 @@ if(doctor.documents){
 
 // ==================== RATE DOCTOR ====================
 export const rateDoctor = async (doctorId, userId, rating, review) => {
-  // Check if doctor exists
-  const doctor = await prisma.doctor.findUnique({
-    where: { id: doctorId },
-  });
+  const doctor = await prisma.doctor.findUnique({ where: { id: doctorId } });
+  if (!doctor) throw new Error('Doctor not found');
 
-  if (!doctor) {
-    throw new Error('Doctor not found');
-  }
+  const patient = await prisma.patient.findUnique({ where: { userId } });
+  if (!patient) throw new Error('Patient not found');
 
-  // Check if patient exists
-  const patient = await prisma.patient.findUnique({
-    where: { userId },
-  });
-
-  if (!patient) {
-    throw new Error('Patient not found');
-  }
-
-  // Check if patient has completed appointment with this doctor
   const hasCompletedAppointment = await prisma.appointment.findFirst({
-    where: {
-      patientId: patient.id,
-      doctorId,
-      status: 'COMPLETED',
-    },
+    where: { patientId: patient.id, doctorId, status: 'COMPLETED' },
   });
 
   if (!hasCompletedAppointment) {
     throw new Error('You can only rate doctors after a completed appointment');
   }
 
-  // Update doctor rating
   const newTotalReviews = doctor.totalReviews + 1;
-  const newRating = ((doctor.rating * doctor.totalReviews) + rating) / newTotalReviews;
+  const newRating = (doctor.rating * doctor.totalReviews + rating) / newTotalReviews;
 
   const updatedDoctor = await prisma.doctor.update({
     where: { id: doctorId },
-    data: {
-      rating: newRating,
-      totalReviews: newTotalReviews,
-    },
-    include: {
-      user: {
-        select: {
-          fullName: true,
-        },
-      },
-    },
+    data: { rating: newRating, totalReviews: newTotalReviews },
+    include: { user: { select: { fullName: true } } },
   });
 
-  // Create audit log
   await prisma.auditLog.create({
     data: {
       userId: patient.userId,
-      action: 'UPDATE',
-      description: `Doctor ${doctor.id} rated by patient ${patient.id} with rating ${rating}`,
+      action: 'RATE',
+      resource: 'Doctor',
+      details: { doctorId, rating },
     },
   });
 
@@ -449,20 +304,16 @@ export const rateDoctor = async (doctorId, userId, rating, review) => {
 export const getDoctorStatistics = async (doctorId) => {
   const doctor = await prisma.doctor.findUnique({
     where: { id: doctorId },
-    include: {
-      appointments: true,
-    },
+    include: { appointments: true },
   });
 
-  if (!doctor) {
-    throw new Error('Doctor not found');
-  }
+  if (!doctor) throw new Error('Doctor not found');
 
   const totalAppointments = doctor.appointments.length;
-  const completedAppointments = doctor.appointments.filter(a => a.status === 'COMPLETED').length;
-  const cancelledAppointments = doctor.appointments.filter(a => a.status === 'CANCELLED').length;
-  const upcomingAppointments = doctor.appointments.filter(a => 
-    ['SCHEDULED', 'CONFIRMED'].includes(a.status) && new Date(a.date) > new Date()
+  const completedAppointments = doctor.appointments.filter((a) => a.status === 'COMPLETED').length;
+  const cancelledAppointments = doctor.appointments.filter((a) => a.status === 'CANCELLED').length;
+  const upcomingAppointments = doctor.appointments.filter(
+    (a) => ['SCHEDULED', 'CONFIRMED'].includes(a.status) && new Date(a.date) > new Date()
   ).length;
 
   return {
@@ -483,31 +334,16 @@ export const getDoctorAvailability = async (doctorId) => {
     select: {
       availableDays: true,
       appointments: {
-        where: {
-          date: {
-            gte: new Date(),
-          },
-          status: {
-            in: ['SCHEDULED', 'CONFIRMED'],
-          },
-        },
-        select: {
-          date: true,
-          time: true,
-        },
+        where: { date: { gte: new Date() }, status: { in: ['SCHEDULED', 'CONFIRMED'] } },
+        select: { date: true, time: true },
       },
     },
   });
 
-  if (!doctor) {
-    throw new Error('Doctor not found');
-  }
+  if (!doctor) throw new Error('Doctor not found');
 
   return {
     availableDays: doctor.availableDays,
-    bookedSlots: doctor.appointments.map(apt => ({
-      date: apt.date,
-      time: apt.time,
-    })),
+    bookedSlots: doctor.appointments.map((apt) => ({ date: apt.date, time: apt.time })),
   };
 };
