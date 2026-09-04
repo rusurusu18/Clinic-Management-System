@@ -171,62 +171,54 @@ socket.on('updateAppointment', async (data)=>{
 
 
        // cancel appointment
-socket.on('cancelAppointment', async (data) => {
+    socket.on('appointment:cancel', async (data) => {
     try {
-        const { appointmentId, ...cancelData } = data;
+        const { appointmentId, reason } = data;
+        const appointment = await prisma.appointment.findUnique({where:{id:appointmentId},
+        include:{
+            patient:true,
+            doctor:true
+         }
+        })
 
-        // Update appointment status
-        const appointment = await prisma.appointment.update({
-            where: {
-                id: appointmentId,
-            },
-            data: {
-                status: 'CANCELLED',
-                ...cancelData,
-            },
-            include: {
-                patient: true,
-                doctor: true,
-            },
-        });
-
-        if (appointment) {
-            const appointmentData = {
-                ...appointment,
-                appointmentId: appointment.id,
-                cancelledBy: socket.userId,
-                timestamp: new Date(),
-            };
-
-            // Notify doctor
-            io.to(`doctor-${appointment.doctorId}`).emit(
-                'appointmentCancelled',
-                appointmentData
-            );
-
-            // Notify staff
-            io.to('staff').emit(
-                'appointmentCancelled',
-                appointmentData
-            );
-
-            // Confirm cancellation to patient
-            socket.emit(
-                'appointmentCancelled',
-                appointmentData
-            );
-        }
-    } catch (err) {
-        console.error('Error cancelling appointment:', err);
-
-        socket.emit('cancelAppointmentError', {
-            message: 'Error cancelling appointment',
-        });
+        if(appointment){ 
+            io.to(`patient_${appointment.patientId}`).emit('appointment:cancelled'),{
+            appointmentId,
+            reason,
+            timestamp: new Date()
+        })
+        io.to(`doctor_$(appointment.doctorId}`).emit('appointment:cancel',{
+            appointmentId,
+            reason,
+            timestamp: new Date()
+        })
+        io.to(`staff`).emit('appointment:cancel',{
+            appointmentId,
+            reason,
+            timestamp: new Date()
+        })
     }
-});
+    }   
+    catch (error) {
+        socket.emit('cancelAppointmentError', {
+            message: 'Error cancelling appointment'
+        })
+    }
+})
+
 
  // chat events
-       
+socket.on('chat:message',async(data)=>{
+    try{
+        const {recipientId, message,type="text"}=data;
+
+        //store message in database
+        const chatMessage = await prisma.chatMessage.
+    }
+    catch(error){
+        console.log("")
+    }
+})   
 
     
 
