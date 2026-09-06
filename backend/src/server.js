@@ -1,6 +1,9 @@
 import "dotenv/config";
+import { createServer } from "node:http";
 import app from "./app.js";
 import { ENV } from "./config/env.js";
+import prisma from "./config/database.js";
+import { initializeSocket } from "./config/socket.js";
 
 //connect to database
 await prisma.$connect()

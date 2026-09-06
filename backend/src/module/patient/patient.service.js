@@ -1,5 +1,5 @@
 import prisma from '../../config/database.js';
-import { MESSAGES } from '../../constants/messages.js';
+import { MESSAGES } from '../../constants/message.js';
 import { uploadMultipleToCloudinaryFn, deleteFromCloudinaryFn, deleteMultipleFromCloudinary } from '../../config/multer.js';
 
 // ==================== HELPERS ====================

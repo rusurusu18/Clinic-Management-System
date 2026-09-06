@@ -44,3 +44,5 @@ router.post(
   handleMulterError,
   authController.uploadAvatar
 );
+
+export default router;
