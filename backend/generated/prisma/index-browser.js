@@ -333,6 +333,31 @@ exports.Prisma.PaymentScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ChatMessageScalarFieldEnum = {
+  id: 'id',
+  senderId: 'senderId',
+  recipientId: 'recipientId',
+  message: 'message',
+  type: 'type',
+  read: 'read',
+  readAt: 'readAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.NotificationScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  message: 'message',
+  type: 'type',
+  link: 'link',
+  read: 'read',
+  readAt: 'readAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -493,6 +518,23 @@ exports.Prisma.PaymentOrderByRelevanceFieldEnum = {
   notes: 'notes',
   refundReason: 'refundReason'
 };
+
+exports.Prisma.ChatMessageOrderByRelevanceFieldEnum = {
+  id: 'id',
+  senderId: 'senderId',
+  recipientId: 'recipientId',
+  message: 'message',
+  type: 'type'
+};
+
+exports.Prisma.NotificationOrderByRelevanceFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  message: 'message',
+  type: 'type',
+  link: 'link'
+};
 exports.Role = exports.$Enums.Role = {
   PATIENT: 'PATIENT',
   DOCTOR: 'DOCTOR',
@@ -598,7 +640,9 @@ exports.Prisma.ModelName = {
   Prescription: 'Prescription',
   Report: 'Report',
   Bill: 'Bill',
-  Payment: 'Payment'
+  Payment: 'Payment',
+  ChatMessage: 'ChatMessage',
+  Notification: 'Notification'
 };
 
 /**

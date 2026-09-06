@@ -1,562 +1,545 @@
-import { Server } from "socket.io";
-import jwt from "jsonwebtoken";
+import {Server} from "socket.io";
 import prisma from "../config/database.js";
 import { ENV } from "./env.js";
-
-let io = null;
-
-
-// ============================================
-// JWT TOKEN VERIFICATION
-// ============================================
-
-const verifyToken = (token) => {
-    const decoded = jwt.verify(token, ENV.JWT_ACCESS_SECRET);
-
-    // Supports common JWT payload structures
-    return decoded.userId || decoded.id || decoded.sub;
-};
+import app from "../app.js";
 
 
-// ============================================
-// INITIALIZE SOCKET.IO
-// ============================================
 
-export const initializeSocket = (server) => {
 
+let io = null; // Initialize io as null
+
+// function to intialize socket.io server
+export const initializeSocket = (server) =>{
     io = new Server(server, {
-        cors: {
-            origin: ENV.FRONTEND_URL || "http://localhost:5173",
-            credentials: true,
-            methods: ["GET", "POST", "PUT", "DELETE"],
+        cors:{
+            origin: ENV.FRONTEND_URL  || 'http://localhost:5173',
+            credentials:true,
+            methods:['GET','POST','PUT','DELETE'],
         },
+        pingTimeout: 60000,  // 60 seconds
+        pingInterval: 25000, // 25 seconds
+    })
 
-        pingTimeout: 60000,
-        pingInterval: 25000,
-    });
 
-
-    // ============================================
-    // SOCKET AUTHENTICATION MIDDLEWARE
-    // ============================================
-
-    io.use(async (socket, next) => {
-
-        try {
-
-            const token = socket.handshake.auth?.token;
-
-            if (!token) {
-                return next(new Error("No token provided"));
+    // authentication middleware for socket.io
+    io.use(async (socket, next)=>{
+        try{
+            const token = socket.handshake.auth.token; // get token from handshake auth
+            if(!token){
+                throw new Error("No token provided");
             }
 
-
-            // Verify JWT
-            const userId = verifyToken(token);
-
-            if (!userId) {
-                return next(new Error("Invalid token"));
-            }
-
-
-            // Get user
-            const user = await prisma.user.findUnique({
-                where: {
-                    id: userId,
-                },
-
-                include: {
-                    patient: true,
-                    doctor: true,
-                },
+            // Verify token and get userId
+            const userId = await verifyToken(token,ENV.JWT_ACCESS_SECRET); // Assuming you have a function to verify JWT
+            const user = await prisma.user.findUnique({where:{id:userId},
+                include:{
+                    patient:true,
+                    doctor:true,
+                }
             });
+            if(!user){
+                throw new Error("User not found");
+            }
+            if(!user.isActive){
+                throw new Error("User is not active");
+            }
+            socket.user = user; // Attach user to socket object for later use
+            socket.userId = user.id; // Attach userId to socket object for later use
+            socket.role=user.role; // Attach role to socket object for later use
 
-
-            if (!user) {
-                return next(new Error("User not found"));
+            // store user's room based in role and id, for example: "patient-<userId>" or "doctor-<userId>"
+            socket.join(`${user.role}-${user.id}`);
+            if(user.role === 'PATIENT' && user.patient){
+                socket.join(`patient-${user.patient.id}`);
+            }
+            if(user.role === 'DOCTOR' && user.doctor){
+                socket.join(`doctor-${user.doctor.id}`);
             }
 
+            next(); // Proceed to the next middleware or event handler
 
-            if (!user.isActive) {
-                return next(new Error("User is not active"));
-            }
-
-
-            // Attach user information to socket
-            socket.user = user;
-            socket.userId = user.id;
-            socket.role = user.role;
-
-
-            next();
-
-        } catch (error) {
-
-            console.error("Socket authentication error:", error.message);
-
+        }
+        catch(err){
+            console.error("Socket authentication error:", err);
             next(new Error("Authentication error"));
         }
-    });
+    })
 
+    // connection handler 
+    io.on('connection', (socket)=>{
+        console.log(`User connected: ${socket.user.fullName} (${socket.user.role})`);
 
-    // ============================================
-    // CONNECTION HANDLER
-    // ============================================
-
-    io.on("connection", (socket) => {
-
-        console.log(
-            `User connected: ${socket.user.fullName} (${socket.user.role})`
-        );
-
-
-        // User-specific room
+        // join role-based room 
         socket.join(`${socket.user.role}-${socket.user.id}`);
-
-
-        // Patient room
-        if (
-            socket.user.role === "PATIENT" &&
-            socket.user.patient
-        ) {
-            socket.join(`patient_${socket.user.patient.id}`);
-        }
-
-
-        // Doctor room
-        if (
-            socket.user.role === "DOCTOR" &&
-            socket.user.doctor
-        ) {
-            socket.join(`doctor_${socket.user.doctor.id}`);
-        }
-
-
-        // Staff room
-        if (
-            ["ADMIN", "RECEPTIONIST"].includes(socket.user.role)
-        ) {
-            socket.join("staff");
-        }
-
-
-        // Notify other connected users
-        socket.broadcast.emit("userStatusChanged", {
-            userId: socket.user.id,
-            status: "online",
-        });
-
-
-        // Setup events
+        // notify others about user status 
+        socket.brodcast.emit('userStatusChanged', {userId: socket.user.id, status:'online'});
+        // setupevent handlers 
         setupEventHandlers(socket);
 
 
-        // ============================================
-        // DISCONNECT
-        // ============================================
-
-        socket.on("disconnect", () => {
-
-            console.log(
-                `User disconnected: ${socket.user.fullName} (${socket.user.role})`
-            );
+        // handle disconnection
+        socket.on('disconnect', ()=>{
+            console.log(`User disconnected: ${socket.user.fullName} (${socket.user.role})`);
+            // notify others about user status 
+            socket.brodcast.emit('userStatusChanged', {userId: socket.user.id, status:'offline'});
+        })
 
 
-            socket.broadcast.emit("userStatusChanged", {
-                userId: socket.user.id,
-                status: "offline",
-            });
+   
 
-        });
+    // handle errors 
+    io.on('error', (error)=>{
+        console.log(`socket error:`, error);
+    })
+     })
+    return io; // Return the initialized io instance
 
-    });
-
-
-    // ============================================
-    // SOCKET.IO SERVER ERROR
-    // ============================================
-
-    io.engine.on("connection_error", (error) => {
-        console.error("Socket connection error:", error);
-    });
+}
 
 
-    return io;
-};
+// event handler for socket events
+const setupEventHandlers = (socket)=>{
+    // appintment relted events
+    //book appointment 
+    socket.on('bookAppointment', async (data)=>{
+        try{
+            // broadcast to doctor and staff  room  that a new appointment is booked
+            io.to(`doctor_${data.doctorId}`).emit('newAppointment', {...data,
+                 bookedBY:socket.userId, 
+                 fullName: socket.fullName, 
+                 timestamp: new Date()
+                });
+                 io.to(`staff`).emit('newAppointment', {...data,
+                 bookedBY:socket.userId, 
+                 fullName: socket.fullName, 
+                 timestamp: new Date()});
 
-
-// ============================================
-// SOCKET EVENT HANDLERS
-// ============================================
-
-const setupEventHandlers = (socket) => {
-
-
-    // ============================================
-    // BOOK APPOINTMENT
-    // ============================================
-
-    socket.on("bookAppointment", async (data) => {
-
-        try {
-
-            const eventData = {
-                ...data,
-                bookedBy: socket.userId,
-                fullName: socket.user.fullName,
-                timestamp: new Date(),
-            };
-
-
-            // Notify doctor
-            io.to(`doctor_${data.doctorId}`)
-                .emit("newAppointment", eventData);
-
-
-            // Notify admin/receptionist
-            io.to("staff")
-                .emit("newAppointment", eventData);
-
-
-            // Confirm to user who booked appointment
-            socket.emit("appointmentBooked", eventData);
-
-
-        } catch (error) {
-
-            console.error(
-                "Error booking appointment:",
-                error
-            );
-
-
-            socket.emit("bookAppointmentError", {
-                message: "Error booking appointment",
-            });
-        }
-
-    });
-
-
-    // ============================================
-    // UPDATE APPOINTMENT
-    // ============================================
-
-    socket.on("updateAppointment", async (data) => {
-
-        try {
-
-            const {
-                appointmentId,
-                ...updateData
-            } = data;
-
-
-            if (!appointmentId) {
-
-                return socket.emit(
-                    "updateAppointmentError",
-                    {
-                        message: "Appointment ID is required",
-                    }
-                );
-            }
-
-
-            const appointment =
-                await prisma.appointment.update({
-
-                    where: {
-                        id: appointmentId,
-                    },
-
-                    data: updateData,
-
-                    include: {
-                        patient: true,
-                        doctor: true,
-                    },
+                 // confirm to patient 
+                 socket.emit('appointmentBooked', {...data,
+                 bookedBY:socket.userId,  
+                 timestamp: new Date()
                 });
 
-
-            const eventData = {
-                ...appointment,
-                timestamp: new Date(),
-            };
-
-
-            // Notify doctor
-            io.to(
-                `doctor_${appointment.doctorId}`
-            ).emit(
-                "appointmentUpdated",
-                eventData
-            );
-
-
-            // Notify staff
-            io.to("staff")
-                .emit(
-                    "appointmentUpdated",
-                    eventData
-                );
-
-
-            // Notify patient
-            io.to(
-                `patient_${appointment.patientId}`
-            ).emit(
-                "appointmentUpdated",
-                eventData
-            );
-
-
-            // Confirm to current socket
-            socket.emit(
-                "appointmentUpdateSuccess",
-                eventData
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "Error updating appointment:",
-                error
-            );
-
-
-            socket.emit(
-                "updateAppointmentError",
-                {
-                    message:
-                        "Error updating appointment",
-                }
-            );
         }
-
+        catch(err){
+            console.error("Error booking appointment:", err);
+            socket.emit('bookAppointmentError', {message: "Error booking appointment"});
+        }
     });
 
 
-    // ============================================
-    // CANCEL APPOINTMENT
-    // ============================================
+//update appontment
+socket.on('updateAppointment', async (data)=>{
+    try{
+        const {appointmentId, ...updateData} = data;
+        // broadcast to doctor and staff  room  that a new appointment is booked
+        const appointment = await prisma.appointment.update({
+            where: {id: appointmentId},
+            data: updateData,
+            include:{
+                patient:true,
+                doctor:true,
+            }
+       
+        }) 
+        if(appointment){
+            io.to(`doctor_${appointment.doctorId}`).emit('appointmentUpdated', {...appointment,
+                 appointmentId:appointment.id,
+                 ...updateData,
+                 timestamp: new Date()
+                }); 
 
-    socket.on(
-        "appointment:cancel",
-        async (data) => {
+                io.to(`staff`).emit('appointmentUpdated', {...appointment,
+                    appointmentId:appointment.id,
+                    ...updateData,
+                    timestamp: new Date()
+                   });
 
-            try {
+                // confirm to patient 
+                socket.emit('appointmentUpdated', {...appointment,
+                    appointmentId:appointment.id,
+                    ...updateData,
+                    timestamp: new Date()
+                   });
+        }
+    }
+     catch(err){
+            console.error("Error updating appointment:", err);
+            socket.emit('updateAppointmentError', {message: "Error updating appointment"});
+       }   })
 
-                const {
+
+
+       // cancel appointmentog
+       socket.on('appointment:cancel', async(data) =>{
+        try{
+            const { appointmentId, reason}= data;
+            const appointment = await  prisma.appointment.findUnique({where:{id:appointmentId},
+                 include:{
+                patient:true,
+                doctor:true
+                 }
+            })
+
+            if(appointment){
+                io.to(`patient_${appointment.patientId}`).emit('appointment:cancelled',{
                     appointmentId,
                     reason,
-                } = data;
-
-
-                if (!appointmentId) {
-
-                    return socket.emit(
-                        "cancelAppointmentError",
-                        {
-                            message:
-                                "Appointment ID is required",
-                        }
-                    );
-                }
-
-
-                const appointment =
-                    await prisma.appointment.findUnique({
-
-                        where: {
-                            id: appointmentId,
-                        },
-
-                        include: {
-                            patient: true,
-                            doctor: true,
-                        },
-                    });
-
-
-                if (!appointment) {
-
-                    return socket.emit(
-                        "cancelAppointmentError",
-                        {
-                            message:
-                                "Appointment not found",
-                        }
-                    );
-                }
-
-
-                const cancelData = {
-                    appointmentId,
-                    reason:
-                        reason ||
-                        "No reason provided",
-                    timestamp: new Date(),
-                };
-
-
-                // Notify patient
-                io.to(
-                    `patient_${appointment.patientId}`
-                ).emit(
-                    "appointment:cancelled",
-                    cancelData
-                );
-
-
-                // Notify doctor
-                io.to(
-                    `doctor_${appointment.doctorId}`
-                ).emit(
-                    "appointment:cancelled",
-                    cancelData
-                );
-
-
-                // Notify staff
-                io.to("staff")
-                    .emit(
-                        "appointment:cancelled",
-                        cancelData
-                    );
-
-
-                // Confirm to current socket
-                socket.emit(
-                    "appointment:cancelSuccess",
-                    cancelData
-                );
-
-
-            } catch (error) {
-
-                console.error(
-                    "Error cancelling appointment:",
-                    error
-                );
-
-
-                socket.emit(
-                    "cancelAppointmentError",
-                    {
-                        message:
-                            "Error cancelling appointment",
-                    }
-                );
+                    timestamp:new Date()
+                })
+                io.to(`doctor_${appointment.doctorId}`).emit('appointment:cancel',{
+                     appointmentId,
+                    reason,
+                    timestamp:new Date()
+                });
+                io.to('staff').emit('appointment:cancel',{
+                     appointmentId,
+                    reason,
+                    timestamp:new Date()
+                })
             }
+           
+            }
+
+
+        
+        catch(error){
+            socket.emit("appointment:error",{
+                message:error.message
+            })
+        }
+
+       })
+
+
+       // chat events
+
+       socket.on('chat:message', async(data)=>{
+        try{
+            const {recipientId, message, type="text"} = data;
+
+            // store message in database 
+            const chatMessage = await prisma.chatMessage.create({
+                data:{
+                    senderId:socket.userId,
+                    recipientId,
+                    message,
+                    type,
+                    read:false,
+                },
+                include:{
+                    sender:{
+                        select:{
+                        fullName:true,
+                        avatar:true,
+
+                    }
+                }
+            }
+                
+            });
+            // emit to recipient
+            io.to(`user_${recipientId}`).emit('chat:message',{
+                ...chatMessage,
+                timestamp:new Date(),
+            })
+            //confirm to sender
+            socket.emit('chat:sent',{
+                ...chatMessage,
+                timestamp:new Date(),
+            })
 
         }
-    );
+        catch(error){
+            socket.emit("chat:error",{
+                message:error.message,
+            })
+        }
+       })
+
+       // Mark message as read
+       socket.on('chat:read', async(data)=>{
+        try{
+            const {messageId} = data;
+            await prisma.chatMessage.update({
+                where:{id:messageId},
+                data:{read:true,readAt: new Date()}
+
+            })
+
+            // notify the sender
+            const message = await prisma.chatMessage.findUnique({where:{id:messageId},
+                select:{senderId:true}
+            });
+            if(message){
+                io.to(`user_${message.senderId}`).emit('chat:read',{
+                    messageId,
+                    readAt:new Date(),
+                })
+        }
+            
+            
+        }
+        catch(error){
+             socket.emit("chat:error",{
+                message:error.message,
+            })
+        }
+       })
 
 
-    // ============================================
-    // CHAT MESSAGE
-    // ============================================
+       //get chat history
+       socket.on('chat:history', async(data)=>{
+        try{
+            const {userId , limit=50, offset=0} = data;
 
-    socket.on("chat:message", async (data) => {
-
-        try {
-
-            const {
-                recipientId,
-                message,
-                type = "text",
-            } = data;
-
-
-            if (!recipientId || !message) {
-
-                return socket.emit(
-                    "chat:error",
-                    {
-                        message:
-                            "Recipient ID and message are required",
+            const messages = await prisma.chatMessage.findMany({
+                where:{
+                    OR:[
+                        {senderId:socket.userId, recipientId:userId},  // messages sent by the current user to the specified user
+                        {senderId:userId, recipientId:socket.userId}    // 
+                    ]
+                },
+                include:{
+                    sender:{
+                        select:{
+                            fullName:true,
+                            avatar:true,
+                        }
                     }
-                );
-            }
+                },
+                orderBy:{
+                    createdAt:'desc'
+                },
+                take:limit,
+                skip:offset,
+
+            });
+            socket.emit('chat:history', {
+                messages:messages.reverse(), // reverse to show oldest first
+                total:messages.length,
+            })
+        }
+        catch(error){
+            socket.emit("chat:error",{
+                message:error.message,
+            })
+        }
+       })
 
 
-            /*
-             * IMPORTANT:
-             *
-             * Change these field names according
-             * to your ChatMessage Prisma model.
-             *
-             * Expected fields:
-             *
-             * senderId
-             * recipientId
-             * message
-             * type
-             */
+       /// typing indicator
+       socket.on('chat:typing', (data)=>{
+        try{
+            const {recipientId, isTyping} = data;
+            io.to(`user_${recipientId}`).emit('chat:typing',{
+                senderId:socket.userId,
+                isTyping,
+                timestamp:new Date(),
+            })
 
-            const chatMessage =
-                await prisma.chatMessage.create({
+        }
+        catch(error){
+            socket.emit("chat:error",{
+                message:error.message,
+            })
+        }
+       })
 
-                    data: {
-                        senderId: socket.userId,
+
+       /// user status indicator
+         socket.on('user:status', (data)=>{
+          try{
+            const {status} = data;
+            // broadcast to all users that this user is online/offline
+            socket.broadcast.emit('user:status',{
+                userId:socket.userId,
+                status,
+                timestamp:new Date(),
+            })
+          }
+          catch(error){
+            socket.emit("user:status:error",{
+                message:error.message,
+            })
+          }
+         })
+
+         //Notifications events
+
+         //send notifications
+         socket.on('notification:send', async(data)=>{
+            try{
+                const {recipientId, title, message, type="info"} = data;
+                // store notification in database
+                const notification = await prisma.notification.create({
+                    data:{
+                        senderId:socket.userId,
                         recipientId,
+                        title,
                         message,
                         type,
-                    },
+                        read:false,
+                    }
                 });
+                // emit to recipient
+                io.to(`user_${recipientId}`).emit('notification:received',{
+                    ...notification,
+                    timestamp:new Date(),
+                })
+                // confirm to sender
+                socket.emit('notification:sent',{
+                    ...notification,
+                    timestamp:new Date(),
+                })
+            }
+            catch(error){
+                socket.emit("notification:error",{
+                    message:error.message,
+                })
+            }
+         })
 
 
-            // Send message to recipient
-            io.to(
-                `${recipientId}`
-            ).emit(
-                "chat:newMessage",
-                chatMessage
-            );
-
-
-            // Confirm message to sender
-            socket.emit(
-                "chat:messageSent",
-                chatMessage
-            );
-
-
-        } catch (error) {
-
-            console.error(
-                "Chat message error:",
-                error
-            );
-
-
-            socket.emit(
-                "chat:error",
-                {
-                    message:
-                        "Error sending message",
+         // mark notification as read
+         socket.on('notification:read', async(data)=>{
+            try{
+                const {notificationId} = data;
+                await prisma.notification.update({
+                    where:{id:notificationId},
+                    data:{read:true, readAt:new Date()},
+                });
+                // notify the sender
+                const notification = await prisma.notification.findUnique({
+                    where:{id:notificationId},
+                    select:{senderId:true}
+                });
+                if(notification){
+                    io.to(`user_${notification.senderId}`).emit('notification:read',{
+                        notificationId,
+                        readAt:new Date(),
+                    })
                 }
-            );
-        }
+            }
+            catch(error){
+                socket.emit("notification:error",{
+                    message:error.message,
+                })
+            }
+         })
 
-    });
+         //get unread notifications count
+            socket.on('notification:unreadCount', async(data)=>{
+                try{
+                    const count = await prisma.notification.count({
+                        where:{
+                            recipientId:socket.userId,
+                            read:false,
+                        }
+                    });
+                    socket.emit('notification:unreadCount',{
+                        count,
+                        timestamp:new Date(),
+                    })
 
-};
+                }
+                catch(error){
+                    socket.emit("notification:error",{
+                        message:error.message,
+                    })
+                }
+            })
 
 
-// ============================================
-// GET SOCKET INSTANCE
-// ============================================
 
-export const getIO = () => {
+       // patient events
+         socket.on('patient:update', async(data)=>{
+          try{
+            const {patientId, ...updateData} = data;
+            const patient = await prisma.patient.update({
+                where:{id:patientId},
+                data:updateData,
+            });
 
-    if (!io) {
-        throw new Error(
-            "Socket.IO has not been initialized"
-        );
-    }
+            // Broadcast to doctor and staff rooms that a patient has been updated
+            io.to(`doctor_${patient.doctorId}`).emit('patient:updated',{
+                ...patient,
+                timestamp:new Date(),
+            });
+            io.to('staff').emit('patient:updated',{
+                ...patient,
+                timestamp:new Date(),
+            });
+            // notify the patient
+            io.to(`patient_${patientId}`).emit('patient:updated',{
+                ...patient,
+                timestamp:new Date(),
+            })
+          }
+          catch(error){
+            socket.emit("patient:error",{
+                message:error.message,
+            })
+          }
+         })
 
-    return io;
-};
+
+
+         //patient medical record events
+            socket.on('medicalRecord:update', async(data)=>{
+                try{
+                    const{patientId , recordId, ...updateData} = data;
+                    io.to(`patient_${patientId}`).emit('medicalRecord:updated',{
+                        recordId,
+                        ...updateData,
+                        timestamp:new Date(),
+                    
+                    });
+                    io.to(`doctor_${data.doctorId}`).emit('medicalRecord:updated',{
+                        recordId,
+                        ...updateData,
+                        timestamp:new Date(),
+                    });
+                }
+                catch(error){
+                    socket.emit("medicalRecord:error",{
+                        message:error.message,
+                    })
+                }
+            })
+
+
+            //doctor events
+            //doctor availability update
+            socket.on('doctor:update', async(data)=>{
+                try{
+                    const {doctorId, ...updateData} = data;
+                    const doctor = await prisma.doctor.update({
+                        where:{id:doctorId},
+                        data:updateData,
+                    });
+
+                    // Broadcast to patient and staff rooms that a doctor has been updated
+                    io.to(`patient_${doctor.patientId}`).emit('doctor:updated',{
+                        ...doctor,
+                        timestamp:new Date(),
+                    });
+                    io.to('staff').emit('doctor:updated',{
+                        ...doctor,
+                        timestamp:new Date(),
+                    });
+                    // notify the doctor
+                    io.to(`doctor_${doctorId}`).emit('doctor:updated',{
+                        ...doctor,
+                        timestamp:new Date(),
+                    })
+                }
+                catch(error){
+                    socket.emit("doctor:error",{
+                        message:error.message,
+                    })
+                }
+            }
+            )
+
+}

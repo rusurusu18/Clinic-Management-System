@@ -90,9 +90,12 @@ model User {
   auditLogs     AuditLog[]
   otps          OTP[]
 
-  patient           Patient?
-  doctor            Doctor?
-  headedDepartments Department[] @relation("DepartmentHead")
+  patient          Patient?
+  doctor           Doctor?
+  departmentHead   Department[]   @relation("DepartmentHead")
+  sentMessages     ChatMessage[]  @relation("SentMessages")
+  receivedMessages ChatMessage[]  @relation("ReceivedMessages")
+  notifications    Notification[]
 
   @@map("users")
 }
@@ -433,6 +436,38 @@ model Payment {
   updatedAt DateTime @updatedAt
 
   @@map("payments")
+}
+
+model ChatMessage {
+  id          String    @id @default(cuid())
+  senderId    String
+  sender      User      @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  recipientId String
+  recipient   User      @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
+  message     String
+  type        String    @default("text") // text, image, file
+  read        Boolean   @default(false)
+  readAt      DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("chat_messages")
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String // INFO, WARNING, SUCCESS, ERROR, ADMIN
+  link      String?
+  read      Boolean   @default(false)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("notifications")
 }
 
 enum BillStatus {
