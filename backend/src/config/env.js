@@ -23,10 +23,10 @@ export const ENV = {
 
   // // Client
   // CLIENT_URL: process.env.CLIENT_URL || "http://localhost:3000",
-  // FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
-  // RESET_PASSWORD_URL:
-  //   process.env.RESET_PASSWORD_URL ||
-  //   "http://localhost:3000/reset-password",
+  FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
+   RESET_PASSWORD_URL:
+   process.env.RESET_PASSWORD_URL ||
+    "http://localhost:3000/reset-password",
 
   // Email
   EMAIL_HOST: process.env.EMAIL_HOST,
@@ -54,5 +54,12 @@ export const ENV = {
 
   RESEND_OTP_RATE_LIMIT_MAX:
     parseInt(process.env.RESEND_OTP_RATE_LIMIT_MAX) || 3,
-    Cloud_Name:process.env.Cloud_Name
+    Cloud_Name:process.env.Cloud_Name,
+    Cloud_API_SECRET:process.env.Cloud_API_SECRET,
+    Cloud_API_KEY:process.env.Cloud_API_KEY,
+    KHALTI_API_KEY:process.env.KHALTI_SECRET_KEY,
+    KHALTI_ENVIRONMENT:process.env.KHALTI_ENVIRONMENT,
+    KHALTI_RETURN_URL:process.env.KHALTI_RETURN_URL,
+    KHALTI_WEBSITE_URL:process.env.KHALTI_WEBSITE_URL
+    
 };
