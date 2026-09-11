@@ -2,6 +2,7 @@ import {Server} from "socket.io";
 import prisma from "../config/database.js";
 import { ENV } from "./env.js";
 import app from "../app.js";
+import socketEmitter from '../utils/socketEmitter.js';
 
 
 
