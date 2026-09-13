@@ -4,7 +4,11 @@ import{paymentSchema, getPaymentQuerySchema,updatePaymentSchema,refundPaymentSch
 import { validate } from '../../middleware/validateMiddleware.js';
 import {verifyToken,authorize} from '../../middleware/authMiddleware.js';
 import { ROLES } from '../../constants/roles.js';
+import esewaRoutes from '../esewa/esewa.routes.js';
+
 const router = express.Router();
+
+router.use('/esewa', esewaRoutes);
 router.use(verifyToken); // Apply verifyToken middleware to all routes
 
 //create payment
