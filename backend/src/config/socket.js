@@ -2,12 +2,14 @@ import {Server} from "socket.io";
 import prisma from "../config/database.js";
 import { ENV } from "./env.js";
 import app from "../app.js";
-import socketEmitter from '../utils/socketEmitter.js';
+import { verifyAccessToken } from "../utils/jwt.js";
 
 
 
 
 let io = null; // Initialize io as null
+
+export const getIO = () => io;
 
 // function to intialize socket.io server
 export const initializeSocket = (server) =>{
@@ -31,7 +33,7 @@ export const initializeSocket = (server) =>{
             }
 
             // Verify token and get userId
-            const userId = await verifyToken(token,ENV.JWT_ACCESS_SECRET); // Assuming you have a function to verify JWT
+            const userId = verifyAccessToken(token).userId;
             const user = await prisma.user.findUnique({where:{id:userId},
                 include:{
                     patient:true,

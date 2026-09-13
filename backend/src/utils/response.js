@@ -15,6 +15,10 @@ export const errorResponse = (res, message = 'Error', statusCode = STATUS_CODES.
   return res.status(statusCode).json(response);
 };
 
+export const badRequestResponse = (res, message = 'Bad request', errors = null) => {
+  return errorResponse(res, message, STATUS_CODES.BAD_REQUEST, errors);
+};
+
 export const createdResponse = (res, data, message = 'Created successfully') => {
   return successResponse(res, data, message, STATUS_CODES.CREATED);
 };
@@ -54,6 +58,7 @@ export const handleZodError = (res, error) => {
 export default {
   successResponse,
   errorResponse,
+  badRequestResponse,
   createdResponse,
   unauthorizedResponse,
   forbiddenResponse,
