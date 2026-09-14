@@ -8,13 +8,15 @@ import departmentRoutes from "../module/department/department.routes.js"
 import medicalRecordRoutes from "../module/medicalRecord/medicalRecord.routes.js"
 import billingRoutes from "../module/billing/billing.routes.js"
 import paymentRoutes from "../module/payments/payment.routes.js"
-
+import khaltiRoutes from "../module/khalti/khalti.routes.js"
+import esewaRoutes from "../module/esewa/esewa.routes.js"
+import dashboardRoutes from "../module/dashboard/dashboard.routes.js"
 
 const router = express.Router();
 
 router.get("/health",(req,res)=>{
     return res.json({
-        message:"cilnic managemnet system",
+        message:"Cilnic Management System",
         success:true
     })
 })
@@ -27,6 +29,9 @@ router.use("/department",departmentRoutes)
 router.use("/medical-record",medicalRecordRoutes)
 router.use("/billing",billingRoutes)
 router.use("/payments", paymentRoutes) 
+router.use("/khalti", khaltiRoutes)
+router.use("/esewa", esewaRoutes)
+router.use("/dashboard", dashboardRoutes)
 
 
 export default router

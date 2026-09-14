@@ -7,6 +7,7 @@ import AuthLayout from '../components/layout/AuthLayout';
 import AdminLayout from '../components/layout/AdminLayout';
 import StaffLayout from '../components/layout/StaffLayout';
 import PatientLayout from '../components/layout/PatientLayout';
+import DoctorLayout from '../components/layout/DoctorLayout';
 
 // Public pages
 import Home from '../pages/Home';
@@ -19,7 +20,7 @@ import Services from '../pages/Services';
 import ServiceDetail from '../pages/ServiceDetail';
 import Booking from '../pages/Booking';
 
-// Dashboard pages
+// Dashboard pages-Admin
 import AdminOverview from '../pages/dashboard/admin/AdminOverview';
 import StaffOverview from '../pages/dashboard/staff/StaffOverview';
 import StaffAppointments from '../pages/dashboard/staff/StaffAppointments';
@@ -32,6 +33,13 @@ import AdminReports from '../pages/dashboard/admin/AdminReports';
 import AdminSettings from '../pages/dashboard/admin/AdminSettings';
 import PatientAppointments from '../pages/dashboard/patient/PatientAppointments';
 import PatientHistory from '../pages/dashboard/patient/PatientHistory';
+
+// Dashboard pages — Doctor
+import DoctorOverview from '../pages/dashboard/doctor/DoctorOverview';
+import DoctorAppointments from '../pages/dashboard/doctor/DoctorAppointments';
+import DoctorPatients from '../pages/dashboard/doctor/DoctorPatients';
+import DoctorRecords from '../pages/dashboard/doctor/DoctorRecords';
+import DoctorSettings from '../pages/dashboard/doctor/DoctorSettings';
 
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
@@ -47,12 +55,35 @@ const RouteWrapper = ({ children }) => (
   </React.Suspense>
 );
 
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children, requiredRole }) => {
   const isAuthenticated = localStorage.getItem('auth_token');
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+  if (requiredRole) {
+    const role = localStorage.getItem('auth_role');
+    if (role && role.toUpperCase() !== requiredRole.toUpperCase()) {
+      const redirectByRole = {
+        ADMIN: '/admin',
+        DOCTOR: '/doctor',
+        RECEPTIONIST: '/staff',
+        PATIENT: '/patient',
+      };
+      return <Navigate to={redirectByRole[role?.toUpperCase()] || '/login'} replace />;
+    }
+  }
   return children;
+};
+
+const redirectByRole = () => {
+  const role = localStorage.getItem('auth_role');
+  const map = {
+    ADMIN: '/admin',
+    DOCTOR: '/doctor',
+    RECEPTIONIST: '/staff',
+    PATIENT: '/patient',
+  };
+  return map[role?.toUpperCase()] || '/admin';
 };
 
 const router = createBrowserRouter([
@@ -71,14 +102,15 @@ const router = createBrowserRouter([
       { path: 'contact', element: <RouteWrapper><Contact /></RouteWrapper> },
       { path: 'book', element: <RouteWrapper><Booking /></RouteWrapper> },
       { path: 'home', element: <Navigate to="/" replace /> },
+       { path: 'dashboard', element: <Navigate to={redirectByRole()} replace /> },
     ],
   },
 
-  // ---- Authenticated dashboards (Admin, Staff, Patient) ----
+  // ---- Admin Dashboard----
   {
     path: '/admin',
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRole="ADMIN">
         <AdminLayout />
       </ProtectedRoute>
     ),
@@ -90,10 +122,12 @@ const router = createBrowserRouter([
       { path: 'settings', element: <AdminSettings /> },
     ],
   },
+
+  // ---- STAFF / RECEPTIONIST DASHBOARD ----
   {
     path: '/staff',
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRole="RECEPTIONIST">
         <StaffLayout />
       </ProtectedRoute>
     ),
@@ -107,10 +141,30 @@ const router = createBrowserRouter([
       { path: 'settings', element: <StaffSettings /> },
     ],
   },
+
+  // ---- DOCTOR DASHBOARD ----
+  {
+    path: '/doctor',
+    element: (
+      <ProtectedRoute requiredRole="DOCTOR">
+        <DoctorLayout />
+      </ProtectedRoute>
+    ),
+    errorElement: <NotFound />,
+    children: [
+      { index: true, element: <DoctorOverview /> },
+      { path: 'appointments', element: <DoctorAppointments /> },
+      { path: 'patients', element: <DoctorPatients /> },
+      { path: 'records', element: <DoctorRecords /> },
+      { path: 'settings', element: <DoctorSettings /> },
+    ],
+  },
+
+  // ---- PATIENT DASHBOARD ----
   {
     path: '/patient',
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRole="PATIENT">
         <PatientLayout />
       </ProtectedRoute>
     ),
@@ -139,17 +193,28 @@ const router = createBrowserRouter([
                 <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
                 <input type="password" placeholder="••••••••" className="input" />
               </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Login as (demo)</label>
+                <select id="demo_role" className="input" defaultValue="DOCTOR">
+                  <option value="ADMIN">Administrator</option>
+                  <option value="DOCTOR">Doctor</option>
+                  <option value="RECEPTIONIST">Receptionist / Staff</option>
+                  <option value="PATIENT">Patient</option>
+                </select>
+              </div>
               <button
                 onClick={() => {
-                  localStorage.setItem('auth_token', 'demo_token');
-                  window.location.href = '/dashboard';
+                  const role = document.getElementById('demo_role').value;
+                  localStorage.setItem('auth_token', 'demo_token_' + Date.now());
+                  localStorage.setItem('auth_role', role);
+                  const dest = { ADMIN: '/admin', DOCTOR: '/doctor', RECEPTIONIST: '/staff', PATIENT: '/patient' }[role] || '/';
+                  window.location.href = dest;
                 }}
                 className="btn btn-primary btn-full"
               >
                 Sign in
               </button>
-              <p className="text-center text-xs text-slate-400 dark:text-slate-500">Demo mode — any credentials will sign you in.</p>
-            </div>
+              <p className="text-center text-xs text-slate-400">Demo mode — select a role above, any credentials will sign you in to the corresponding dashboard.</p>            </div>
           </RouteWrapper>
         ),
       },

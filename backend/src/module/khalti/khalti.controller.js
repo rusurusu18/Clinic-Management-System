@@ -1,4 +1,4 @@
-import khaltiService from './khalti.service.js';
+import khaltiService from './khalti.services.js';
 import {
   successResponse,
   createdResponse,

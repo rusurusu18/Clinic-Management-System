@@ -1,7 +1,7 @@
 import {z} from "zod";
 
 
-export const paymentSchema = z.object({
+export const createPaymentSchema = z.object({
     billId:z.string().min(1,"Bill ID is required"),
     amount:z.number().positive("Amount must be a positive number"),
     method:z.enum(["CASH","KHALTI","ESEWA"],"Payment method must be one of CASH, KHALTI, or ESEWA"),

@@ -1,7 +1,7 @@
 import express from 'express';
 import * as paymentController from './payment.controller.js';
-import { verifyToken, authorize } from '../../middleware/authMiddleware.js';import { validate } from '../../middleware/validateMiddleware.js';
-import { validate } from '../../middleware/validateMiddleware.js';import { ROLES } from '../../constants/roles.js';
+import { verifyToken, authorize } from '../../middleware/authMiddleware.js';
+import { validate } from '../../middleware/validateMiddleware.js';
 import { ROLES } from '../../constants/roles.js';
 import {
   strictAuthLimiter,

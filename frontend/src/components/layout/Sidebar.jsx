@@ -90,7 +90,7 @@ const Sidebar = ({ open, onClose, navItems, title = 'Clinic' }) => {
           </Link>
           <button
             onClick={() => {
-              localStorage.removeItem('auth_token');
+              localStorage.removeItem('auth_role');
               window.location.href = '/';
             }}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20"

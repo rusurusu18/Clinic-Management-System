@@ -47,3 +47,18 @@ export const getDoctorLoad = async (req, res) => {
     return errorResponse(res, error.message || 'Failed to fetch doctor load');
   }
 };
+
+// ==================== DOCTOR SELF DASHBOARD ====================
+export const getDoctorSelfDashboard = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const dashboard = await dashboardService.getDoctorSelfDashboard(userId);
+    return successResponse(res, dashboard, 'Doctor dashboard fetched successfully');
+  } catch (error) {
+    console.error('Doctor self dashboard error:', error);
+    if (error.message === 'Doctor profile not found for this user') {
+      return res.status(404).json({ success: false, message: error.message, code: 'DOCTOR_PROFILE_NOT_FOUND' });
+    }
+    return errorResponse(res, error.message || 'Failed to fetch doctor dashboard');
+  }
+};

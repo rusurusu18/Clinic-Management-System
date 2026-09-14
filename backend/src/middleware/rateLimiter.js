@@ -1,4 +1,4 @@
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { ENV } from '../config/env.js';
 
 const createLimiter = (options = {}) =>
@@ -8,7 +8,7 @@ const createLimiter = (options = {}) =>
     keyGenerator: (req) => {
       const forwarded = req.headers['x-forwarded-for'];
       if (forwarded) return String(forwarded).split(',')[0].trim();
-      return req.ip || req.socket?.remoteAddress || 'unknown';
+      return ipKeyGenerator(req);
     },
     handler: (_req, res) => {
       res.status(429).json({

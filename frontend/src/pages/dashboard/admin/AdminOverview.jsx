@@ -68,7 +68,7 @@ const Overview = () => {
           <button className="btn btn-outline btn-sm">
             <Download className="h-4 w-4" /> Export CSV
           </button>
-          <Link to="/dashboard/appointments" className="btn btn-primary btn-sm">
+          <Link to="/admin/doctors" className="btn btn-primary btn-sm">
             <CalendarPlus className="h-4 w-4" /> New appointment
           </Link>
         </div>
@@ -131,7 +131,7 @@ const Overview = () => {
           subtitle="6 of 48 shown"
           bodyClassName="p-0"
           action={
-            <Link to="/dashboard/appointments" className="flex items-center gap-1 text-xs font-semibold text-primary-700 hover:text-primary-800 dark:text-primary-300">
+            <Link to="/staff/appointments" className="flex items-center gap-1 text-xs font-semibold text-primary-700 hover:text-primary-800 dark:text-primary-300">
               View all <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           }

@@ -230,3 +230,165 @@ export const getDoctorLoad = async (from, to) => {
     appointmentCount: a._count.id,
   }));
 };
+
+// ==================== DOCTOR SELF DASHBOARD STATS ====================
+
+export const getDoctorSelfDashboard = async (userId) => {
+  const doctor = await prisma.doctor.findUnique({
+    where: { userId },
+    include: {
+      user: { select: { fullName: true, email: true, phone: true, avatar: true } },
+      department: { select: { id: true, name: true } },
+    },
+  });
+
+  if (!doctor) throw new Error('Doctor profile not found for this user');
+
+  const now = new Date();
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+
+  const weekStart = new Date(now);
+  weekStart.setDate(weekStart.getDate() - 7);
+
+  const [
+    todayAppointmentsRaw,
+    weekAppointments,
+    totalStats,
+    recentPatients,
+    upcomingAppointments,
+    todayRevenueResult,
+    weekRevenueResult,
+  ] = await Promise.all([
+    prisma.appointment.findMany({
+      where: { doctorId: doctor.id, date: { gte: todayStart, lte: todayEnd } },
+      include: {
+        patient: { include: { user: { select: { fullName: true, avatar: true, phone: true } } } },
+      },
+      orderBy: { time: 'asc' },
+    }),
+    prisma.appointment.findMany({
+      where: { doctorId: doctor.id, date: { gte: weekStart, lte: todayEnd } },
+      select: { id: true, status: true, date: true },
+    }),
+    prisma.appointment.groupBy({
+      by: ['status'],
+      where: { doctorId: doctor.id },
+      _count: { id: true },
+    }),
+    prisma.patient.findMany({
+      where: { appointments: { some: { doctorId: doctor.id } } },
+      include: { user: { select: { fullName: true, avatar: true, phone: true, email: true } } },
+      orderBy: { updatedAt: 'desc' },
+      take: 8,
+    }),
+    prisma.appointment.findMany({
+      where: {
+        doctorId: doctor.id,
+        date: { gte: todayStart },
+        status: { in: ['SCHEDULED', 'CONFIRMED'] },
+      },
+      include: {
+        patient: { include: { user: { select: { fullName: true, phone: true } } } },
+      },
+      orderBy: [{ date: 'asc' }, { time: 'asc' }],
+      take: 10,
+    }),
+    prisma.bill.aggregate({
+      where: {
+        appointment: { doctorId: doctor.id },
+        generatedAt: { gte: todayStart, lte: todayEnd },
+        status: 'PAID',
+      },
+      _sum: { totalAmount: true },
+    }),
+    prisma.bill.aggregate({
+      where: {
+        appointment: { doctorId: doctor.id },
+        generatedAt: { gte: weekStart, lte: todayEnd },
+        status: 'PAID',
+      },
+      _sum: { totalAmount: true },
+    }),
+  ]);
+
+  const statusMap = Object.fromEntries(totalStats.map((s) => [s.status, s._count.id]));
+  const totalAppointments = totalStats.reduce((s, r) => s + r._count.id, 0);
+
+  const todayAppointments = todayAppointmentsRaw.map((a) => ({
+    id: a.id,
+    time: a.time,
+    status: a.status,
+    type: a.type,
+    notes: a.notes,
+    patient: {
+      id: a.patient.id,
+      name: a.patient.user.fullName,
+      phone: a.patient.user.phone,
+      avatar: a.patient.user.avatar,
+    },
+  }));
+
+  return {
+    doctor: {
+      id: doctor.id,
+      fullName: doctor.user.fullName,
+      email: doctor.user.email,
+      phone: doctor.user.phone,
+      avatar: doctor.user.avatar,
+      specialization: doctor.specialization,
+      experience: doctor.experience,
+      hospital: doctor.hospital,
+      consultationFee: doctor.consultationFee,
+      rating: doctor.rating,
+      totalReviews: doctor.totalReviews,
+      availableDays: doctor.availableDays,
+      department: doctor.department,
+    },
+    kpis: {
+      today: {
+        appointments: todayAppointments.length,
+        completed: todayAppointments.filter((a) => a.status === 'COMPLETED').length,
+        scheduled: todayAppointments.filter((a) => ['SCHEDULED', 'CONFIRMED'].includes(a.status)).length,
+        revenue: todayRevenueResult._sum.totalAmount || 0,
+      },
+      week: {
+        appointments: weekAppointments.length,
+        completed: weekAppointments.filter((a) => a.status === 'COMPLETED').length,
+        cancelled: weekAppointments.filter((a) => a.status === 'CANCELLED').length,
+        revenue: weekRevenueResult._sum.totalAmount || 0,
+      },
+      career: {
+        totalAppointments,
+        completed: statusMap['COMPLETED'] || 0,
+        cancelled: statusMap['CANCELLED'] || 0,
+        noShow: statusMap['NO_SHOW'] || 0,
+        scheduled: statusMap['SCHEDULED'] || 0,
+        uniquePatients: recentPatients.length,
+      },
+    },
+    todayAppointments,
+    upcomingAppointments: upcomingAppointments.map((a) => ({
+      id: a.id,
+      date: a.date,
+      time: a.time,
+      status: a.status,
+      patient: {
+        id: a.patient.id,
+        name: a.patient.user.fullName,
+        phone: a.patient.user.phone,
+      },
+    })),
+    recentPatients: recentPatients.map((p) => ({
+      id: p.id,
+      name: p.user.fullName,
+      email: p.user.email,
+      phone: p.user.phone,
+      avatar: p.user.avatar,
+      bloodGroup: p.bloodGroup,
+      lastVisit: p.updatedAt,
+    })),
+  };
+};
