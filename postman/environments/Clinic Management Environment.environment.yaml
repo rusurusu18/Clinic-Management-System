@@ -1,4 +1,0 @@
-name: Clinic Management Environment
-values:
-  - key: baseUrl
-    value: 'http://localhost:5000'
