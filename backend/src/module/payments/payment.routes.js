@@ -43,7 +43,7 @@ router.post(
   authorize(ROLES.ADMIN, ROLES.RECEPTIONIST),
   paymentInitiateLimiter,
   validate(createPaymentSchema),
-  paymentController.createaPayment,
+  paymentController.createPayment,
 );
 
 // Patient-level history — before /:id

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
-// Register Validation Schema
+// Register Validation Schema— PUBLIC self-registration endpoint.
+// Allows ONLY Patient signup. ADMIN / DOCTOR / RECEPTIONIST accounts must be
+// provisioned by an existing Admin via the /admin or /staff endpoints.
 export const registerSchema = z.object({
     fullName: z.string()
         .min(2, 'Full name must be at least 2 characters')
@@ -21,9 +23,21 @@ export const registerSchema = z.object({
         .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 
             'Password must contain at least one uppercase, one lowercase, and one number'),
     
-    role: z.enum(['ADMIN', 'DOCTOR', 'PATIENT', 'RECEPTIONIST'])
+     confirmPassword: z.string()
+        .min(1, 'Confirm password is required'),
+
+    // Intentionally locked to PATIENT for the public registration endpoint.
+    // Passing anything else will be coerced to PATIENT by the transform below.
+    role: z
+        .enum(['PATIENT'], {
+            invalid_type_error:
+                'Public registration is available for patients only. Staff accounts must be created by an admin.',
+        })
         .optional()
         .default('PATIENT'),
+        }).refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
 });
 
 // Login Validation Schema

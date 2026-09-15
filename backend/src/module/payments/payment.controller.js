@@ -7,7 +7,7 @@ import {
   conflictResponse,
 } from '../../utils/response.js';
 
-export const createaPayment = async (req, res) => {
+export const createPayment = async (req, res) => {
   try {
     const payment = await paymentService.createPayment(req.body);
     return createdResponse(res, payment, 'Payment created successfully');
@@ -15,13 +15,19 @@ export const createaPayment = async (req, res) => {
     if (error.message === 'Bill not found') {
       return notFoundResponse(res, 'Bill not found');
     }
-    if (error.message.includes('cannot process') || error.message.includes('already paid') ||
-      error.message.includes('Cannot make payment') || error.message.includes('exceeds')) {
+    if (
+      error.message.includes('cannot process') ||
+      error.message.includes('already paid') ||
+      error.message.includes('Cannot make payment') ||
+      error.message.includes('exceeds')
+    ) {
       return conflictResponse(res, error.message);
     }
     return errorResponse(res, error.message || 'Failed to create payment');
   }
 };
+
+export const createaPayment = createPayment;
 
 export const getAllPayments = async (req, res) => {
   try {

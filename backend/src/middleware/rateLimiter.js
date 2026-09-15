@@ -7,8 +7,10 @@ const createLimiter = (options = {}) =>
     legacyHeaders: false,
     keyGenerator: (req) => {
       const forwarded = req.headers['x-forwarded-for'];
-      if (forwarded) return String(forwarded).split(',')[0].trim();
-      return ipKeyGenerator(req);
+      const clientIp = forwarded
+        ? String(forwarded).split(',')[0].trim()
+        : req.ip || req.socket?.remoteAddress || 'unknown';
+      return ipKeyGenerator(clientIp);
     },
     handler: (_req, res) => {
       res.status(429).json({
