@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   CalendarDays,
@@ -14,8 +14,18 @@ import {
   LogOut,
   X,
 } from 'lucide-react';
+import { useAppDispatch } from '../../hooks/authHooks.js';
+import { logoutUser } from '../../Redux/slices/authSlice.js';
 
 const Sidebar = ({ open, onClose, navItems, title = 'Clinic' }) => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
+  const handleSignOut = async () => {
+    await dispatch(logoutUser());
+    navigate('/');
+  };
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -89,10 +99,7 @@ const Sidebar = ({ open, onClose, navItems, title = 'Clinic' }) => {
             <ArrowLeft className="h-4.5 w-4.5" /> Back to website
           </Link>
           <button
-            onClick={() => {
-              localStorage.removeItem('auth_role');
-              window.location.href = '/';
-            }}
+            onClick={handleSignOut}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20"
           >
             <LogOut className="h-4.5 w-4.5" /> Sign out

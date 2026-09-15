@@ -1,5 +1,7 @@
 import React from 'react';
-import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate , useLocation } from 'react-router-dom';
+import { useAppSelector } from '../hooks/authHooks.js';
+
 
 // Layouts
 import Layout from '../components/layout/Layout';
@@ -19,6 +21,8 @@ import NotFound from '../pages/Error';
 import Services from '../pages/Services';
 import ServiceDetail from '../pages/ServiceDetail';
 import Booking from '../pages/Booking';
+import Login from '../pages/Login.jsx';
+import Register from '../pages/Register.jsx';
 
 // Dashboard pages-Admin
 import AdminOverview from '../pages/dashboard/admin/AdminOverview';
@@ -27,6 +31,7 @@ import StaffAppointments from '../pages/dashboard/staff/StaffAppointments';
 import StaffPatients from '../pages/dashboard/staff/StaffPatients';
 import StaffSettings from '../pages/dashboard/staff/StaffSettings';
 import AdminDoctors from '../pages/dashboard/admin/AdminDoctors';
+import AdminStaff from '../pages/dashboard/admin/AdminStaff';
 import StaffQueue from '../pages/dashboard/staff/StaffQueue';
 import StaffBilling from '../pages/dashboard/staff/StaffBilling';
 import AdminReports from '../pages/dashboard/admin/AdminReports';
@@ -41,7 +46,14 @@ import DoctorPatients from '../pages/dashboard/doctor/DoctorPatients';
 import DoctorRecords from '../pages/dashboard/doctor/DoctorRecords';
 import DoctorSettings from '../pages/dashboard/doctor/DoctorSettings';
 
-import LoadingSpinner from '../components/ui/LoadingSpinner';
+import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
+
+const ROLE_DASHBOARD_MAP = {
+  ADMIN: '/admin',
+  DOCTOR: '/doctor',
+  RECEPTIONIST: '/staff',
+  PATIENT: '/patient',
+};
 
 const RouteWrapper = ({ children }) => (
   <React.Suspense
@@ -56,38 +68,63 @@ const RouteWrapper = ({ children }) => (
 );
 
 const ProtectedRoute = ({ children, requiredRole }) => {
-  const isAuthenticated = localStorage.getItem('auth_token');
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+ const { isAuthenticated, user, isLoading } = useAppSelector((s) => s.auth);
+  const location = useLocation();
+
+  if (isLoading) {
+    return (
+      <div className="flex-center min-h-[100vh]">
+        <LoadingSpinner size="lg" text="Verifying authentication..." />
+      </div>
+    );
   }
+
+  if (!isAuthenticated) {
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location }}
+      />
+    );
+  }
+
   if (requiredRole) {
-    const role = localStorage.getItem('auth_role');
-    if (role && role.toUpperCase() !== requiredRole.toUpperCase()) {
-      const redirectByRole = {
-        ADMIN: '/admin',
-        DOCTOR: '/doctor',
-        RECEPTIONIST: '/staff',
-        PATIENT: '/patient',
-      };
-      return <Navigate to={redirectByRole[role?.toUpperCase()] || '/login'} replace />;
+    const userRole = user?.role?.toUpperCase();
+    const targetRole = requiredRole.toUpperCase();
+    const allowedRoles = targetRole === 'STAFF' ? ['RECEPTIONIST', 'DOCTOR'] : [targetRole];
+    if (userRole && !allowedRoles.includes(userRole)) {
+      const redirect = ROLE_DASHBOARD_MAP[userRole] || '/login';
+      return <Navigate to={redirect} replace />;
     }
   }
+  return children;
+};
+const GuestRoute = ({ children }) => {
+  const { isAuthenticated, user, isLoading } = useAppSelector((s) => s.auth);
+
+  if (isLoading) {
+    return (
+      <div className="flex-center min-h-[100vh]">
+        <LoadingSpinner size="lg" text="Loading..." />
+      </div>
+    );
+  }
+
+  if (isAuthenticated && user?.role) {
+    const redirect = ROLE_DASHBOARD_MAP[user.role.toUpperCase()] || '/';
+    return <Navigate to={redirect} replace />;
+  }
+
   return children;
 };
 
 const redirectByRole = () => {
   const role = localStorage.getItem('auth_role');
-  const map = {
-    ADMIN: '/admin',
-    DOCTOR: '/doctor',
-    RECEPTIONIST: '/staff',
-    PATIENT: '/patient',
-  };
-  return map[role?.toUpperCase()] || '/admin';
+  return ROLE_DASHBOARD_MAP[role?.toUpperCase()] || '/login';
 };
 
 const router = createBrowserRouter([
-  // ---- Public website ----
   {
     path: '/',
     element: <Layout />,
@@ -106,7 +143,6 @@ const router = createBrowserRouter([
     ],
   },
 
-  // ---- Admin Dashboard----
   {
     path: '/admin',
     element: (
@@ -118,16 +154,17 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <AdminOverview /> },
       { path: 'doctors', element: <AdminDoctors /> },
+      { path: 'staff', element: <AdminStaff /> },
       { path: 'reports', element: <AdminReports /> },
       { path: 'settings', element: <AdminSettings /> },
     ],
   },
 
-  // ---- STAFF / RECEPTIONIST DASHBOARD ----
+ 
   {
     path: '/staff',
     element: (
-      <ProtectedRoute requiredRole="RECEPTIONIST">
+      <ProtectedRoute requiredRole="STAFF">
         <StaffLayout />
       </ProtectedRoute>
     ),
@@ -142,7 +179,7 @@ const router = createBrowserRouter([
     ],
   },
 
-  // ---- DOCTOR DASHBOARD ----
+ 
   {
     path: '/doctor',
     element: (
@@ -160,7 +197,7 @@ const router = createBrowserRouter([
     ],
   },
 
-  // ---- PATIENT DASHBOARD ----
+
   {
     path: '/patient',
     element: (
@@ -175,46 +212,39 @@ const router = createBrowserRouter([
     ],
   },
 
-  // ---- Auth ----
+  
   {
     path: '/login',
-    element: <AuthLayout />,
+     element: (
+      <GuestRoute>
+        <AuthLayout />
+      </GuestRoute>
+    ),
     children: [
       {
         index: true,
         element: (
           <RouteWrapper>
-            <div className="space-y-4">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Email or phone</label>
-                <input type="text" placeholder="you@example.com" className="input" />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
-                <input type="password" placeholder="••••••••" className="input" />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300">Login as (demo)</label>
-                <select id="demo_role" className="input" defaultValue="DOCTOR">
-                  <option value="ADMIN">Administrator</option>
-                  <option value="DOCTOR">Doctor</option>
-                  <option value="RECEPTIONIST">Receptionist / Staff</option>
-                  <option value="PATIENT">Patient</option>
-                </select>
-              </div>
-              <button
-                onClick={() => {
-                  const role = document.getElementById('demo_role').value;
-                  localStorage.setItem('auth_token', 'demo_token_' + Date.now());
-                  localStorage.setItem('auth_role', role);
-                  const dest = { ADMIN: '/admin', DOCTOR: '/doctor', RECEPTIONIST: '/staff', PATIENT: '/patient' }[role] || '/';
-                  window.location.href = dest;
-                }}
-                className="btn btn-primary btn-full"
-              >
-                Sign in
-              </button>
-              <p className="text-center text-xs text-slate-400">Demo mode — select a role above, any credentials will sign you in to the corresponding dashboard.</p>            </div>
+            <Login />
+          </RouteWrapper>
+        ),
+      },
+    ],
+  },
+
+  {
+    path: '/register',
+    element: (
+      <GuestRoute>
+        <AuthLayout />
+      </GuestRoute>
+    ),
+    children: [
+      {
+        index: true,
+        element: (
+          <RouteWrapper>
+            <Register />
           </RouteWrapper>
         ),
       },

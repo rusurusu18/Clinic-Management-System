@@ -20,6 +20,8 @@ import {
   CalendarPlus,
 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAppDispatch, useAppSelector } from '../../hooks/authHooks.js';
+import { logoutUser } from '../../Redux/slices/authSlice.js';
 import Button from '../ui/Button';
 
 const navLinks = [
@@ -46,10 +48,11 @@ const services = [
 const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { theme, toggleTheme } = useTheme();
+  const { isAuthenticated, user } = useAppSelector((s) => s.auth);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isServicesDropdownOpen, setIsServicesDropdownOpen] = useState(false);
 
   useEffect(() => {
@@ -57,10 +60,6 @@ const Navbar = () => {
     handleScroll();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    setIsAuthenticated(!!localStorage.getItem('auth_token'));
   }, []);
 
   useEffect(() => {
@@ -87,9 +86,8 @@ const Navbar = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    setIsAuthenticated(false);
+  const handleLogout = async () => {
+     await dispatch(logoutUser());
     navigate('/');
   };
 
