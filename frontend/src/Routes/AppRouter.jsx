@@ -1,5 +1,5 @@
 import React from 'react';
-import { createBrowserRouter, RouterProvider, Navigate , useLocation } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider, Navigate, useLocation } from 'react-router-dom';
 import { useAppSelector } from '../hooks/authHooks.js';
 
 
@@ -48,6 +48,9 @@ import DoctorSettings from '../pages/dashboard/doctor/DoctorSettings';
 
 import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
 
+import PatientForm from '../components/patients/PatientForm';
+import PatientDetails from '../components/patients/PatientDetails';
+
 const ROLE_DASHBOARD_MAP = {
   ADMIN: '/admin',
   DOCTOR: '/doctor',
@@ -68,7 +71,7 @@ const RouteWrapper = ({ children }) => (
 );
 
 const ProtectedRoute = ({ children, requiredRole }) => {
- const { isAuthenticated, user, isLoading } = useAppSelector((s) => s.auth);
+  const { isAuthenticated, user, isLoading } = useAppSelector((s) => s.auth);
   const location = useLocation();
 
   if (isLoading) {
@@ -139,7 +142,7 @@ const router = createBrowserRouter([
       { path: 'contact', element: <RouteWrapper><Contact /></RouteWrapper> },
       { path: 'book', element: <RouteWrapper><Booking /></RouteWrapper> },
       { path: 'home', element: <Navigate to="/" replace /> },
-       { path: 'dashboard', element: <Navigate to={redirectByRole()} replace /> },
+      { path: 'dashboard', element: <Navigate to={redirectByRole()} replace /> },
     ],
   },
 
@@ -160,7 +163,7 @@ const router = createBrowserRouter([
     ],
   },
 
- 
+
   {
     path: '/staff',
     element: (
@@ -176,10 +179,14 @@ const router = createBrowserRouter([
       { path: 'queue', element: <StaffQueue /> },
       { path: 'billing', element: <StaffBilling /> },
       { path: 'settings', element: <StaffSettings /> },
+      { path: 'patients', element: <StaffPatients /> },
+      { path: 'patients/create', element: <PatientForm /> },
+      { path: 'patients/:id', element: <PatientDetails /> },
+      { path: 'patients/:id/edit', element: <PatientForm /> },
     ],
   },
 
- 
+
   {
     path: '/doctor',
     element: (
@@ -194,6 +201,8 @@ const router = createBrowserRouter([
       { path: 'patients', element: <DoctorPatients /> },
       { path: 'records', element: <DoctorRecords /> },
       { path: 'settings', element: <DoctorSettings /> },
+      { path: 'patients', element: <DoctorPatients /> },
+      { path: 'patients/:id', element: <PatientDetails /> },
     ],
   },
 
@@ -212,10 +221,10 @@ const router = createBrowserRouter([
     ],
   },
 
-  
+
   {
     path: '/login',
-     element: (
+    element: (
       <GuestRoute>
         <AuthLayout />
       </GuestRoute>

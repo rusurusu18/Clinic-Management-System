@@ -26,6 +26,7 @@ const Register = () => {
     fullName: '',
     email: '',
     phone: '',
+    role:'Patient',
     password: '',
     confirmPassword: '',
   });
@@ -146,6 +147,28 @@ const Register = () => {
           autoComplete="tel"
           disabled={isLoading}
         />
+
+         <div>
+          <label
+            htmlFor="role"
+            className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300"
+          >
+            Account type
+          </label>
+          <select
+            id="role"
+            name="role"
+            value={formData.role}
+            onChange={handleChange}
+            className="input"
+            disabled={isLoading}
+          >
+            <option value="PATIENT">Patient</option>
+          </select>
+          <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
+            Staff accounts are created by an administrator.
+          </p>
+        </div>
 
         <Input
           label="Password"
