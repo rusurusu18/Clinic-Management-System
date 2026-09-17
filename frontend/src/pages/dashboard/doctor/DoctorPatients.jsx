@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import {
   Search,
@@ -14,6 +15,7 @@ import {
 } from 'lucide-react';
 import SectionCard from '../../../components/sections/SectionCard';
 import StatCard from '../../../components/sections/StatCard';
+import { fetchPatientById, fetchPatients } from '../../../Redux/slices/patientSlice.js';
 
 const patientKpis = [
   { label: 'Total Patients', value: 248, sub: 'Under active care', tone: 'primary' },
@@ -22,18 +24,22 @@ const patientKpis = [
   { label: 'Chronic Cases', value: 63, sub: 'Long-term management', tone: 'rose' },
 ];
 
-const patientsList = [
-  { id: 'P-2041', name: 'Anita Shrestha', age: 34, gender: 'Female', phone: '+977 98•••231', email: 'anita@example.com', blood: 'O+', visits: 6, lastVisit: 'Today', nextVisit: '2 weeks', status: 'Active', allergies: ['Penicillin'], conditions: ['Hypertension', 'Type II Diabetes'], lastDiagnosis: 'Essential hypertension' },
-  { id: 'P-2042', name: 'Prakash Rai', age: 41, gender: 'Male', phone: '+977 98•••114', email: 'prakash@example.com', blood: 'B+', visits: 2, lastVisit: 'Today', nextVisit: '1 week', status: 'New', allergies: [], conditions: ['Dyslipidemia'], lastDiagnosis: 'Atypical chest pain' },
-  { id: 'P-2043', name: 'Bina Tamang', age: 28, gender: 'Female', phone: '+977 98•••702', email: 'bina@example.com', blood: 'A+', visits: 9, lastVisit: 'Yesterday', nextVisit: '3 weeks', status: 'Chronic', allergies: ['Sulfa'], conditions: ['MVP'], lastDiagnosis: 'Mitral valve prolapse, stable' },
-  { id: 'P-2044', name: 'Suresh Magar', age: 52, gender: 'Male', phone: '+977 98•••556', email: 'suresh@example.com', blood: 'AB+', visits: 3, lastVisit: '2 days ago', nextVisit: '1 week', status: 'Active', allergies: [], conditions: ['CAD s/p PCI'], lastDiagnosis: 'Post-PCI follow up' },
-  { id: 'P-2045', name: 'Gita Lama', age: 6, gender: 'Female', phone: '+977 98•••889', email: 'gita.parent@example.com', blood: 'A+', visits: 1, lastVisit: '3 days ago', nextVisit: '4 weeks', status: 'Referral', allergies: [], conditions: [], lastDiagnosis: 'Innocent murmur' },
-  { id: 'P-2046', name: 'Rajan Thapa', age: 45, gender: 'Male', phone: '+977 98•••037', email: 'rajan@example.com', blood: 'B-', visits: 5, lastVisit: '5 days ago', nextVisit: '2 weeks', status: 'Active', allergies: ['Aspirin'], conditions: ['Hypertension'], lastDiagnosis: 'HTN on Telmisartan 40mg' },
-  { id: 'P-2047', name: 'Sarita Gurung', age: 39, gender: 'Female', phone: '+977 98•••420', email: 'sarita@example.com', blood: 'O-', visits: 4, lastVisit: '1 week ago', nextVisit: '6 weeks', status: 'Active', allergies: [], conditions: ['Peripartum CMP - resolved'], lastDiagnosis: 'Postpartum follow up' },
-  { id: 'P-2048', name: 'Kamal Bhandari', age: 61, gender: 'Male', phone: '+977 98•••318', email: 'kamal@example.com', blood: 'O-', visits: 12, lastVisit: '5 days ago', nextVisit: '1 week', status: 'Chronic', allergies: [], conditions: ['IHD', 'HTN', 'DM'], lastDiagnosis: 'Post-angio, LAD stent' },
-  { id: 'P-2049', name: 'Hari Sharma', age: 54, gender: 'Male', phone: '+977 98•••010', email: 'hari@example.com', blood: 'A+', visits: 8, lastVisit: 'Yesterday', nextVisit: '1 month', status: 'Active', allergies: ['ACE-inhibitor cough'], conditions: ['DM + HTN'], lastDiagnosis: 'Medication adjusted' },
-  { id: 'P-2050', name: 'Meera Karki', age: 32, gender: 'Female', phone: '+977 98•••122', email: 'meera@example.com', blood: 'B+', visits: 0, lastVisit: 'New', nextVisit: 'Tomorrow', status: 'New', allergies: [], conditions: [], lastDiagnosis: '—' },
-];
+const toPatientRow = (patient) => ({
+  ...patient,
+  name: patient.user?.fullName || 'Unnamed patient',
+  age: patient.dateOfBirth ? new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear() : '-',
+  gender: patient.gender || 'Not recorded',
+  phone: patient.user?.phone || 'No phone number',
+  email: patient.user?.email || 'No email',
+  blood: patient.bloodGroup || 'Not recorded',
+  visits: patient.appointments?.length || 0,
+  lastVisit: patient.appointments?.[0]?.date ? new Date(patient.appointments[0].date).toLocaleDateString() : 'No visits',
+  nextVisit: 'Not scheduled',
+  status: patient.appointments?.length ? 'Active' : 'New',
+  allergies: Array.isArray(patient.allergies) ? patient.allergies : [],
+  conditions: [],
+  lastDiagnosis: typeof patient.medicalHistory === 'string' ? patient.medicalHistory : 'No diagnosis recorded',
+});
 
 const statusTone = {
   Active: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
@@ -43,10 +49,19 @@ const statusTone = {
 };
 
 const DoctorPatients = () => {
+  const dispatch = useDispatch();
+  const { patients, selectedPatient, isLoading, error } = useSelector((state) => state.patient);
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState({ field: 'lastVisit', dir: 'desc' });
   const [statusFilter, setStatusFilter] = useState('All');
   const [selected, setSelected] = useState(null);
+
+  useEffect(() => {
+    dispatch(fetchPatients({ page: 1, limit: 50 }));
+  }, [dispatch]);
+
+  const patientsList = useMemo(() => patients.map(toPatientRow), [patients]);
+  const selectedDetail = selectedPatient?.id === selected?.id ? toPatientRow(selectedPatient) : selected;
 
   const toggleSort = (field) => {
     setSort((s) => ({ field, dir: s.field === field && s.dir === 'asc' ? 'desc' : 'asc' }));
@@ -100,8 +115,10 @@ const DoctorPatients = () => {
             </select>
           </div>
         </div>
-        <p className="text-xs font-semibold text-slate-500">{filtered.length} patients · Click a row to open the chart</p>
+        <p className="text-xs font-semibold text-slate-500">{isLoading ? 'Loading patient records...' : `${filtered.length} patients · Click a row to open the chart`}</p>
       </div>
+
+        {error && <p className="text-sm text-rose-600">{error}</p>}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Patient table */}
@@ -130,7 +147,7 @@ const DoctorPatients = () => {
                 {filtered.map((p) => (
                   <tr
                     key={p.id}
-                    onClick={() => setSelected(p)}
+                    onClick={() => {setSelected(p); dispatch(fetchPatientById(p.id)); }}
                     className={`cursor-pointer transition-colors hover:bg-primary-50/50 dark:hover:bg-primary-900/10 ${selected?.id === p.id ? 'bg-primary-50/60 dark:bg-primary-900/20' : ''}`}
                   >
                     <td className="px-4 py-3">
@@ -168,8 +185,8 @@ const DoctorPatients = () => {
         </SectionCard>
 
         {/* Patient detail card */}
-        <SectionCard title="Patient detail" subtitle={selected ? selected.id : 'Select a patient'} bodyClassName={selected ? 'p-0' : undefined}>
-          {!selected ? (
+        <SectionCard title="Patient detail" subtitle={selectedDetail ? selectedDetail.id : 'Select a patient'} bodyClassName={selectedDetail ? 'p-0' : undefined}>
+          {!selectedDetail ? (
             <div className="py-12 text-center text-sm text-slate-400">
               <UserCircle className="mx-auto h-12 w-12 mb-3 text-slate-300 dark:text-slate-700" />
               Click a patient in the list to see their full chart.
@@ -178,38 +195,38 @@ const DoctorPatients = () => {
             <div className="divide-y divide-slate-50 dark:divide-slate-800/70">
               <div className="p-5 text-center bg-gradient-to-br from-primary-50 to-transparent dark:from-primary-900/20">
                 <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-primary-500 to-primary-700 font-display text-lg font-extrabold text-white shadow-md">
-                  {selected.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
+                  {selectedDetail.name.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                 </span>
-                <p className="mt-3 font-display text-lg font-bold text-slate-900 dark:text-white">{selected.name}</p>
-                <p className="text-xs text-slate-500">{selected.gender} · {selected.age} yrs · Blood {selected.blood}</p>
-                <p className="mt-1 text-xs text-slate-400">{selected.phone} · {selected.email}</p>
+                <p className="mt-3 font-display text-lg font-bold text-slate-900 dark:text-white">{selectedDetail.name}</p>
+                <p className="text-xs text-slate-500">{selectedDetail.gender} · {selectedDetail.age} yrs · Blood {selectedDetail.blood}</p>
+                <p className="mt-1 text-xs text-slate-400">{selectedDetail.phone} · {selectedDetail.email}</p>
               </div>
               <div className="p-5 space-y-3">
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-800/60">
                     <p className="text-slate-500">Total visits</p>
-                    <p className="mt-0.5 font-display text-xl font-bold text-slate-900 dark:text-white">{selected.visits}</p>
+                    <p className="mt-0.5 font-display text-xl font-bold text-slate-900 dark:text-white">{selectedDetail.visits}</p>
                   </div>
                   <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-800/60">
                     <p className="text-slate-500">Next visit</p>
                     <p className="mt-0.5 font-semibold text-primary-700 dark:text-primary-300">{selected.nextVisit}</p>
                   </div>
                 </div>
-                {selected.conditions.length > 0 && (
+                {selectedDetail.conditions.length > 0 && (
                   <div>
                     <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Known conditions</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                      {selected.conditions.map((c) => (
+                      {selectedDetail.conditions.map((c) => (
                         <span key={c} className="rounded-md bg-primary-50 px-2 py-0.5 text-[11px] font-semibold text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">{c}</span>
                       ))}
                     </div>
                   </div>
                 )}
-                {selected.allergies.length > 0 && (
+                {selectedDetail.allergies.length > 0 && (
                   <div>
                     <p className="text-xs font-bold text-rose-500 uppercase tracking-wide">Allergies</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
-                      {selected.allergies.map((a) => (
+                      {selectedDetail.allergies.map((a) => (
                         <span key={a} className="rounded-md bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700 dark:bg-rose-900/30 dark:text-rose-300">{a}</span>
                       ))}
                     </div>
@@ -218,7 +235,7 @@ const DoctorPatients = () => {
                 <div>
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">Last diagnosis</p>
                   <p className="mt-1 text-sm rounded-lg bg-slate-50 p-3 text-slate-700 dark:bg-slate-800/60 dark:text-slate-300">
-                    {selected.lastDiagnosis}
+                    {selectedDetail.lastDiagnosis}
                   </p>
                 </div>
               </div>
