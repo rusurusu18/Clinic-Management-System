@@ -1,9 +1,11 @@
 import {configureStore} from '@reduxjs/toolkit';
-
+import authReducer from './slices/authSlice.js';
+import patientReducer from './slices/patientSlice.js';
 
 export const store = configureStore({
     reducer:{
         auth:authReducer,
+        patient: patientReducer,
     },
     middleware:(getDefaultMiddleware) => 
         getDefaultMiddleware({

@@ -14,6 +14,16 @@ export const login = async (credentials) => {
   return response.data.data;
 };
 
+export const adminLogin = async (credentials) => {
+  const response = await axios.post(`${API_URL}/admin/login`, credentials);
+  return response.data.data;
+};
+
+export const verifyAdminLogin = async (email, otp) => {
+  const response = await axios.post(`${API_URL}/admin/verify-login`, { email, otp });
+  return response.data.data;
+};
+
 export const logout = async () => {
   const response = await axios.post(`${API_URL}/logout`);
   return response.data.data;
@@ -41,11 +51,12 @@ export const forgotPassword = async (email) => {
   return response.data.data;
 };
 
-export const resetPassword = async (email, otp, newPassword) => {
+export const resetPassword = async (email, otp, newPassword, confirmPassword) => {
   const response = await axios.post(`${API_URL}/reset-password`, {
     email,
     otp,
     newPassword,
+    confirmPassword: confirmPassword || newPassword,
   });
   return response.data.data;
 };
@@ -65,10 +76,11 @@ export const updateProfile = async (profileData) => {
   return response.data.data;
 };
 
-export const changePassword = async (currentPassword, newPassword) => {
+export const changePassword = async (currentPassword, newPassword, confirmPassword) => {
   const response = await axios.post(`${API_URL}/change-password`, {
     currentPassword,
     newPassword,
+    confirmPassword: confirmPassword || newPassword,
   });
   return response.data.data;
 };

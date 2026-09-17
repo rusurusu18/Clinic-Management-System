@@ -44,6 +44,8 @@ const initialState = {
   isEmailVerified: getStoredUser()?.isEmailVerified || false,
   error: null,
   otpSent: false,
+  requiresOtp: false,
+  pendingEmail: getStoredUser()?.email || null,
   success: false,
 };
 
@@ -68,6 +70,31 @@ export const loginUser = createAsyncThunk(
       return response;
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Login failed';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const adminLoginUser = createAsyncThunk(
+  'auth/adminLogin',
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const response = await authServices.adminLogin(credentials);
+      return { ...response, email: credentials.email };
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Admin login failed';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const verifyAdminLoginUser = createAsyncThunk(
+  'auth/verifyAdminLogin',
+  async ({ email, otp }, { rejectWithValue }) => {
+    try {
+      return await authServices.verifyAdminLogin(email, otp);
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'Admin verification failed';
       return rejectWithValue(message);
     }
   }
@@ -141,9 +168,9 @@ export const forgotPasswordThunk = createAsyncThunk(
 
 export const resetPasswordThunk = createAsyncThunk(
   'auth/resetPassword',
-  async ({ email, otp, newPassword }, { rejectWithValue }) => {
+  async ({ email, otp, newPassword, confirmPassword }, { rejectWithValue }) => {
     try {
-      await authServices.resetPassword(email, otp, newPassword);
+      await authServices.resetPassword(email, otp, newPassword, confirmPassword);
       return null;
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Password reset failed';
@@ -201,6 +228,9 @@ const authSlice = createSlice({
     resetSuccess: (state) => {
       state.success = false;
     },
+    setPendingEmail: (state, action) => {
+      state.pendingEmail = action.payload;
+    },
     clearAuth: (state) => {
       state.user = null;
       state.accessToken = null;
@@ -210,6 +240,8 @@ const authSlice = createSlice({
       state.error = null;
       state.success = false;
       state.otpSent = false;
+      state.requiresOtp = false;
+      state.pendingEmail = null;
       clearAllAuthStorage();
     },
     setDemoAuth: (state, action) => {
@@ -247,7 +279,8 @@ const authSlice = createSlice({
         state.isEmailVerified = user?.isEmailVerified || false;
         state.success = true;
         persistAuthData(user, accessToken, refreshToken);
-        toast.success('Registration successful');
+        state.pendingEmail = user?.email || null;
+        toast.success('Account created. Verify your email to continue.');
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -269,14 +302,54 @@ const authSlice = createSlice({
         state.isEmailVerified = user?.isEmailVerified || false;
         state.success = true;
         persistAuthData(user, accessToken, refreshToken);
-        toast.success('Login successful');
+        state.pendingEmail = user?.email || null;
+        toast.success('Account created. Verify your email to continue.');
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
         toast.error(action.payload || 'Login failed');
       })
+      .addCase(adminLoginUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(adminLoginUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.requiresOtp = true;
+        state.otpSent = true;
+        state.pendingEmail = action.payload?.email || null;
+        state.success = true;
+        toast.success(action.payload?.message || 'Verification code sent to your email');
+      })
+      .addCase(adminLoginUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+        toast.error(action.payload || 'Admin login failed');
+      })
 
+      .addCase(verifyAdminLoginUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(verifyAdminLoginUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const { user, accessToken, refreshToken } = action.payload;
+        state.user = user;
+        state.accessToken = accessToken;
+        state.refreshToken = refreshToken;
+        state.isAuthenticated = true;
+        state.isEmailVerified = true;
+        state.requiresOtp = false;
+        state.success = true;
+        persistAuthData(user, accessToken, refreshToken);
+        toast.success('Admin login verified');
+      })
+      .addCase(verifyAdminLoginUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+        toast.error(action.payload || 'Invalid verification code');
+      })
       .addCase(logoutUser.pending, (state) => {
         state.isLoading = true;
       })
@@ -441,5 +514,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError, resetSuccess, clearAuth, setDemoAuth } = authSlice.actions;
+export const { clearError, resetSuccess,  setPendingEmail, clearAuth, setDemoAuth } = authSlice.actions;
 export default authSlice.reducer;
