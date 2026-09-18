@@ -1,13 +1,15 @@
-import React from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { DoctorProvider } from './contexts/DoctorContext';
-import AppRouter from './Routes/AppRouter'
+import { DoctorProvider } from './contexts/DoctorContext.jsx';
+import { DepartmentProvider } from './contexts/DepartmentContext.jsx';
+import AppRouter from './routes/AppRouter';
 
 function App() {
   return (
     <ThemeProvider>
       <DoctorProvider>
-        <AppRouter />
+        <DepartmentProvider>
+          <AppRouter />
+        </DepartmentProvider>
       </DoctorProvider>
     </ThemeProvider>
   );
