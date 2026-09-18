@@ -1,5 +1,5 @@
 import express from 'express';
-import { ROLES } from '../../constans/roles.js';
+import { ROLES } from '../../constants/roles.js';
 import { verifyToken, authorize } from '../../middleware/authMiddleware.js';
 import { validate } from '../../middleware/validateMiddleware.js';
 import * as staffController from './staff.controller.js';

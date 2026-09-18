@@ -1,7 +1,9 @@
 import prisma from '../../config/database.js';
-import { Prisma } from '@prisma/client';
+import PrismaClientModule from '../../../generated/prisma/index.js';
 import { hashPassword } from '../../utils/hash.js';
-import { MESSAGES } from '../../constans/messages.js';
+import { MESSAGES } from '../../constants/message.js';
+
+const { Prisma } = PrismaClientModule;
 
 const sanitizeUser = (record) => {
   if (!record) return record;
