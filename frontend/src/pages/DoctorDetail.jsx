@@ -1,4 +1,3 @@
-import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -15,7 +14,7 @@ import {
   UserX,
   BadgeCheck,
 } from 'lucide-react';
-import { doctorsData } from '../utils/dummyData';
+import {  useDoctorContext } from '../hooks/useDoctorContext.js';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 
@@ -25,16 +24,22 @@ const AVATAR_FALLBACK =
     `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 120 120"><rect width="120" height="120" rx="24" fill="%23ccfbf1"/><circle cx="60" cy="46" r="22" fill="%230d9488"/><path d="M20 108c0-22 18-36 40-36s40 14 40 36z" fill="%230d9488"/></svg>`
   );
 
-const schedule = [
-  { day: 'Sunday – Friday', hours: '9:00 AM – 6:00 PM' },
-  { day: 'Saturday', hours: '9:00 AM – 2:00 PM' },
-  { day: 'Public Holidays', hours: 'Emergency only' },
-];
-
 const DoctorDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const doctor = doctorsData.find((d) => d.id === parseInt(id));
+  const { getDoctorById, loading, error } = useDoctorContext();
+  const doctor = getDoctorById(id);
+
+  const schedule = doctor?.availableDays?.length
+    ? doctor.availableDays.map(({ day, startTime, endTime }) => ({
+        day,
+        hours: `${startTime} – ${endTime}`,
+      }))
+    : [];
+
+  if (loading) {
+    return <div className="flex-center min-h-[60vh] text-sm text-slate-500">Loading doctor profile...</div>;
+  }
 
   if (!doctor) {
     return (
@@ -44,7 +49,7 @@ const DoctorDetail = () => {
             <UserX className="h-8 w-8" />
           </span>
           <h2 className="mt-5 text-2xl font-bold text-slate-800 dark:text-white">Doctor not found</h2>
-          <p className="mt-2 text-slate-500">The doctor you're looking for doesn't exist.</p>
+          <p className="mt-2 text-slate-500">{error || "The doctor you're looking for doesn't exist."}</p>
           <Link to="/book" className="mt-6 inline-block">
             <Button variant="primary" icon={<ArrowLeft className="h-4 w-4" />}>Back to Doctors</Button>
           </Link>
@@ -138,12 +143,14 @@ const DoctorDetail = () => {
               <Clock className="h-5 w-5 text-primary-600" /> Availability Schedule
             </h3>
             <div className="mt-4 divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200/70 dark:divide-slate-800 dark:border-slate-800">
-              {schedule.map((row) => (
+              {schedule.length > 0 ? schedule.map((row) => (
                 <div key={row.day} className="flex items-center justify-between bg-slate-50/60 px-4 py-3 dark:bg-slate-800/40">
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{row.day}</span>
                   <span className="text-sm text-slate-600 dark:text-slate-400">{row.hours}</span>
                 </div>
-              ))}
+              )):(
+                <p className="px-4 py-3 text-sm text-slate-500">Availability will be updated soon.</p>
+              )}
             </div>
           </Card>
         </div>
