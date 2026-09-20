@@ -1,45 +1,39 @@
 import prisma from "../../config/database.js";
+import { Prisma } from "@prisma/client";
 
-// CREATE DEPARTMENT
-export const createDepartment = async (departmentData) => {
+// create department 
+export const createDepartment = async (departmentData, createdBy) => {
     const { name, headDoctorId, ...data } = departmentData;
 
-    // Check if department name already exists
+    // check if department name already exists
     const existingDepartment = await prisma.department.findUnique({
-        where: { name }
+        where: { name },
     });
-
     if (existingDepartment) {
         throw new Error("Department with this name already exists");
     }
 
-    // If headDoctorId is provided, check if doctor exists
+    // if headDoctorId is provided, check if doctor exists or not
     if (headDoctorId) {
         const doctor = await prisma.doctor.findUnique({
             where: { id: headDoctorId },
-            include: {
-                user: true
-            }
+            include: { user: true }
         });
 
         if (!doctor) {
             throw new Error("Head doctor not found");
         }
 
-        // Check whether doctor is already head of another department
+        // check if doctor is already head of another department
         const existingHead = await prisma.department.findFirst({
             where: {
                 headDoctorId,
-                NOT: {
-                    headDoctorId: null
-                }
+                NOT: { headDoctorId: null }
             }
         });
 
         if (existingHead) {
-            throw new Error(
-                "This doctor is already head of another department"
-            );
+            throw new Error("This doctor is already head of another department");
         }
     }
 
@@ -51,129 +45,77 @@ export const createDepartment = async (departmentData) => {
         },
         include: {
             headDoctor: {
-                include: {
-                    user: {
-                        select: {
-                            fullName: true,
-                            email: true
-                        }
-                    }
-                }
+                select: { id: true, fullName: true, email: true, phone: true }
             }
         }
     });
 
-    // Create audit log
+    // create audit log
     await prisma.auditLog.create({
         data: {
-            userId: department.headDoctorId || "system",
-            action: "CREATE",
-            description: `Department ${department.name} created`
-        }
+            userId: createdBy,
+            action: 'CREATE',
+            resource: 'Department',
+            details: { departmentId: department.id, name: department.name },
+        },
     });
 
     return department;
 };
 
-// GET ALL DEPARTMENTS
+// get all departments
 export const getAllDepartments = async (query = {}) => {
-    const {
-        page = 1,
-        limit = 10,
-        search,
-        isActive
-    } = query;
-
-    const pageNumber = Number(page);
-    const limitNumber = Number(limit);
-
+    const { page = 1, limit = 10, search, isActive } = query;
+    const pageNumber = Number(page) || 1;
+    const limitNumber = Number(limit) || 10;
     const skip = (pageNumber - 1) * limitNumber;
 
     const where = {};
-
-    // Search by department name
     if (search) {
-        where.name = {
-            contains: search
-        };
+        where.name = { contains: search };
     }
-
-    // Filter by active status
     if (isActive !== undefined) {
-        where.isActive =
-            isActive === true ||
-            isActive === "true";
+        where.isActive = isActive === 'true' ? true : isActive === 'false' ? false : isActive;
     }
 
     const [departments, total] = await Promise.all([
         prisma.department.findMany({
             where,
-
             include: {
                 headDoctor: {
-                    include: {
-                        user: {
-                            select: {
-                                fullName: true,
-                                email: true,
-                                phone: true
-                            }
-                        }
-                    }
+                    select: { id: true, fullName: true, email: true, phone: true }
+                },
+                _count: {
+                    select: { doctors: true }
                 }
             },
-
-            skip,
+            skip: Number(skip),
             take: limitNumber,
-
-            orderBy: {
-                createdAt: "desc"
-            }
+            orderBy: { createdAt: "desc" }
         }),
-
-        prisma.department.count({
-            where
-        })
+        prisma.department.count({ where })
     ]);
 
-    // Get doctor counts separately
-    const departmentsWithDoctorCount = await Promise.all(
-        departments.map(async (department) => {
-            const doctorCount = await prisma.doctor.count({
-                where: {
-                    departmentId: department.id
-                }
-            });
-
-            return {
-                ...department,
-                doctorCount
-            };
-        })
-    );
-
     return {
-        departments: departmentsWithDoctorCount,
-
+        departments,
         pagination: {
             page: pageNumber,
             limit: limitNumber,
             total,
-            totalPages: Math.ceil(total / limitNumber)
+            totalPages: Math.ceil(total / limit)
         }
     };
 };
 
-
-// GET DEPARTMENT BY ID
+// get department by Id
 export const getDepartmentById = async (departmentId) => {
     const department = await prisma.department.findUnique({
-        where: {
-            id: departmentId
-        },
-
+        where: { id: departmentId },
         include: {
             headDoctor: {
+                select: { id: true, fullName: true, email: true, phone: true }
+            },
+            doctors: {
                 include: {
                     user: {
                         select: {
@@ -184,7 +126,78 @@ export const getDepartmentById = async (departmentId) => {
                     }
                 }
             },
+            _count: {
+                select: {
+                    doctors: true
+                }
+            }
+        }
+    });
 
+    if (!department) {
+        throw new Error("Department not found");
+    }
+    return department;
+};
+
+// update department
+export const updateDepartment = async (departmentId, updateData) => {
+    const { name, headDoctorId, ...data } = updateData;
+
+    // check if department exists
+    const existingDepartment = await prisma.department.findUnique({
+        where: { id: departmentId },
+    });
+    if (!existingDepartment) {
+        throw new Error("Department not found");
+    }
+
+    // check if department name already exists (if name is being updated)
+    if (name && name !== existingDepartment.name) {
+        const nameExists = await prisma.department.findUnique({
+            where: { name }
+        });
+        if (nameExists) {
+            throw new Error("Department with this name is already taken");
+        }
+    }
+
+    // if headDoctorId is provided, check if doctor exists or not
+    if (headDoctorId) {
+        const doctor = await prisma.doctor.findUnique({
+            where: { id: headDoctorId },
+            include: { user: true }
+        });
+
+        if (!doctor) {
+            throw new Error("Head doctor not found");
+        }
+
+        // check if doctor is already head of another department
+        const existingHead = await prisma.department.findFirst({
+            where: {
+                headDoctorId,
+                id: { not: departmentId },
+                NOT: { headDoctorId: null }
+            }
+        });
+
+        if (existingHead) {
+            throw new Error("This doctor is already head of another department");
+        }
+    }
+
+    const department = await prisma.department.update({
+        where: { id: departmentId },
+        data: {
+            name,
+            headDoctorId,
+            ...data
+        },
+        include: {
+            headDoctor: {
+                select: { id: true, fullName: true, email: true, phone: true }
+            },
             doctors: {
                 include: {
                     user: {
@@ -199,375 +212,136 @@ export const getDepartmentById = async (departmentId) => {
         }
     });
 
-    if (!department) {
-        throw new Error("Department not found");
-    }
-
-    // Count doctors separately
-    const doctorCount = await prisma.doctor.count({
-        where: {
-            departmentId
-        }
-    });
-
-    return {
-        ...department,
-        doctorCount
-    };
-};
-
-
-// UPDATE DEPARTMENT
-export const updateDepartment = async (
-    departmentId,
-    updateData
-) => {
-    const {
-        name,
-        headDoctorId,
-        ...data
-    } = updateData;
-
-    // Check if department exists
-    const existingDepartment =
-        await prisma.department.findUnique({
-            where: {
-                id: departmentId
-            }
-        });
-
-    if (!existingDepartment) {
-        throw new Error("Department not found");
-    }
-
-    // Check if department name already exists
-    if (
-        name &&
-        name !== existingDepartment.name
-    ) {
-        const nameExists =
-            await prisma.department.findUnique({
-                where: {
-                    name
-                }
-            });
-
-        if (nameExists) {
-            throw new Error(
-                "Department with this name is already taken"
-            );
-        }
-    }
-
-    // If headDoctorId is provided
-    if (headDoctorId) {
-        const doctor =
-            await prisma.doctor.findUnique({
-                where: {
-                    id: headDoctorId
-                },
-                include: {
-                    user: true
-                }
-            });
-
-        if (!doctor) {
-            throw new Error("Head doctor not found");
-        }
-
-        // Check if doctor is already head
-        // of another department
-        const existingHead =
-            await prisma.department.findFirst({
-                where: {
-                    headDoctorId,
-                    id: {
-                        not: departmentId
-                    }
-                }
-            });
-
-        if (existingHead) {
-            throw new Error(
-                "This doctor is already head of another department"
-            );
-        }
-    }
-
-    const department =
-        await prisma.department.update({
-            where: {
-                id: departmentId
-            },
-
-            data: {
-                ...(name !== undefined && { name }),
-                ...(headDoctorId !== undefined && {
-                    headDoctorId
-                }),
-                ...data
-            },
-
-            include: {
-                headDoctor: {
-                    include: {
-                        user: {
-                            select: {
-                                fullName: true,
-                                email: true
-                            }
-                        }
-                    }
-                },
-
-                doctors: {
-                    include: {
-                        user: {
-                            select: {
-                                fullName: true,
-                                email: true,
-                                phone: true
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
     return department;
 };
 
-
-// GET DEPARTMENT DOCTORS
-export const getDepartmentDoctors = async (
-    departmentId,
-    page = 1,
-    limit = 10
-) => {
-    const pageNumber = Number(page);
-    const limitNumber = Number(limit);
-
-    const skip =
-        (pageNumber - 1) * limitNumber;
-
-    // Check department
-    const department =
-        await prisma.department.findUnique({
-            where: {
-                id: departmentId
-            }
-        });
+// get department doctors
+export const getDepartmentDoctors = async (departmentId, page = 1, limit = 10) => {
+    const skip = (page - 1) * limit;
+    const department = await prisma.department.findUnique({
+        where: { id: departmentId }
+    });
 
     if (!department) {
         throw new Error("Department not found");
     }
 
-    const [doctors, total] =
-        await Promise.all([
-            prisma.doctor.findMany({
-                where: {
-                    departmentId
-                },
-
-                include: {
-                    user: {
-                        select: {
-                            fullName: true,
-                            email: true,
-                            phone: true
-                        }
+    const [doctors, total] = await Promise.all([
+        prisma.doctor.findMany({
+            where: { departmentId },
+            include: {
+                user: {
+                    select: {
+                        fullName: true,
+                        email: true,
+                        phone: true
                     }
-                },
-
-                skip,
-                take: limitNumber,
-
-                orderBy: {
-                    createdAt: "desc"
                 }
-            }),
-
-            prisma.doctor.count({
-                where: {
-                    departmentId
-                }
-            })
-        ]);
+            },
+            skip: Number(skip),
+            take: Number(limit),
+            orderBy: { createdAt: "desc" }
+        }),
+        prisma.doctor.count({ where: { departmentId } })
+    ]);
 
     return {
         doctors,
-
         pagination: {
-            page: pageNumber,
-            limit: limitNumber,
+            page: Number(page),
+            limit: Number(limit),
             total,
-            totalPages:
-                Math.ceil(total / limitNumber)
+            totalPages: Math.ceil(total / limit)
         }
     };
 };
 
-
-// ADD DOCTOR TO DEPARTMENT
-export const addDoctorToDepartment = async (
-    departmentId,
-    doctorId
-) => {
-    // Check department
-    const department =
-        await prisma.department.findUnique({
-            where: {
-                id: departmentId
-            }
-        });
-
+// add doctor to department
+export const addDoctorToDepartment = async (departmentId, doctorId) => {
+    const department = await prisma.department.findUnique({
+        where: { id: departmentId }
+    });
     if (!department) {
         throw new Error("Department not found");
     }
 
-    // Check doctor
-    const doctor =
-        await prisma.doctor.findUnique({
-            where: {
-                id: doctorId
-            }
-        });
-
+    const doctor = await prisma.doctor.findUnique({
+        where: { id: doctorId }
+    });
     if (!doctor) {
         throw new Error("Doctor not found");
     }
 
-    // Check if doctor already belongs
-    // to this department
     if (doctor.departmentId === departmentId) {
-        throw new Error(
-            "Doctor is already in this department"
-        );
+        throw new Error("Doctor is already in this department");
     }
 
-    const updatedDoctor =
-        await prisma.doctor.update({
-            where: {
-                id: doctorId
-            },
-
-            data: {
-                departmentId
-            },
-
-            include: {
-                user: {
-                    select: {
-                        fullName: true,
-                        email: true,
-                        phone: true
-                    }
+    const updatedDoctor = await prisma.doctor.update({
+        where: { id: doctorId },
+        data: { departmentId },
+        include: {
+            user: {
+                select: {
+                    fullName: true,
+                    email: true,
+                    phone: true
                 }
             }
-        });
-
-    return updatedDoctor;
-};
-
-
-// REMOVE DOCTOR FROM DEPARTMENT
-export const removeDoctorFromDepartment = async (
-    departmentId,
-    doctorId
-) => {
-    // Check department
-    const department =
-        await prisma.department.findUnique({
-            where: {
-                id: departmentId
-            }
-        });
-
-    if (!department) {
-        throw new Error("Department not found");
-    }
-
-    // Check doctor
-    const doctor =
-        await prisma.doctor.findUnique({
-            where: {
-                id: doctorId
-            }
-        });
-
-    if (!doctor) {
-        throw new Error("Doctor not found");
-    }
-
-    // Check if doctor belongs to department
-    if (doctor.departmentId !== departmentId) {
-        throw new Error(
-            "Doctor is not in this department"
-        );
-    }
-
-    const updatedDoctor =
-        await prisma.doctor.update({
-            where: {
-                id: doctorId
-            },
-
-            data: {
-                departmentId: null
-            },
-
-            include: {
-                user: {
-                    select: {
-                        fullName: true,
-                        email: true,
-                        phone: true
-                    }
-                }
-            }
-        });
-
-    return updatedDoctor;
-};
-
-
-// DELETE DEPARTMENT
-export const deleteDepartment = async (
-    departmentId
-) => {
-    // Check department
-    const department =
-        await prisma.department.findUnique({
-            where: {
-                id: departmentId
-            }
-        });
-
-    if (!department) {
-        throw new Error("Department not found");
-    }
-
-    // Check whether department has doctors
-    const doctorCount =
-        await prisma.doctor.count({
-            where: {
-                departmentId
-            }
-        });
-
-    if (doctorCount > 0) {
-        throw new Error(
-            "Cannot delete department while doctors are assigned to it"
-        );
-    }
-
-    await prisma.department.delete({
-        where: {
-            id: departmentId
         }
     });
 
-    return {
-        message: "Department deleted successfully"
-    };
+    return updatedDoctor;
+};
+
+// remove doctor from department
+export const removeDoctorFromDepartment = async (departmentId, doctorId) => {
+    const department = await prisma.department.findUnique({
+        where: { id: departmentId }
+    });
+    if (!department) {
+        throw new Error("Department not found");
+    }
+
+    const doctor = await prisma.doctor.findUnique({
+        where: { id: doctorId }
+    });
+    if (!doctor) {
+        throw new Error("Doctor not found");
+    }
+
+    if (doctor.departmentId !== departmentId) {
+        throw new Error("Doctor is not in this department");
+    }
+
+    const updatedDoctor = await prisma.doctor.update({
+        where: { id: doctorId },
+        data: { departmentId: null },
+        include: {
+            user: {
+                select: {
+                    fullName: true,
+                    email: true,
+                    phone: true
+                }
+            }
+        }
+    });
+
+    return updatedDoctor;
+};
+
+// delete department
+export const deleteDepartment = async (departmentId) => {
+    const department = await prisma.department.findUnique({
+        where: { id: departmentId }
+    });
+    if (!department) {
+        throw new Error("Department not found");
+    }
+
+    await prisma.department.delete({
+        where: { id: departmentId }
+    });
+
+    return { message: "Department deleted successfully" };
 };

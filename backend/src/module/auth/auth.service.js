@@ -22,7 +22,7 @@ export const registerUser = async (userData) => {
     }
 
     // Check if phone already exists
-    const existingPhone = await prisma.user.findUnique({
+    const existingPhone = await prisma.user.findFirst({
         where: { phone }
     });
 
@@ -190,6 +190,10 @@ export const loginUser = async (email, password, userAgent, ipAddress) => {
     const isPasswordValid = await comparePassword(password, user.password);
     if (!isPasswordValid) {
         throw new Error(MESSAGES.INVALID_CREDENTIALS || 'Invalid email or password');
+    }
+
+     if (!user.isEmailVerified) {
+        throw new Error('EMAIL_NOT_VERIFIED');
     }
 
     if (user.role === 'ADMIN') {

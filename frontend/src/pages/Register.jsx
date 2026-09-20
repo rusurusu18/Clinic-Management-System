@@ -7,21 +7,10 @@ import Button from '../components/ui/Button.jsx';
 import Input from '../components/ui/Input.jsx';
 import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
 
-const redirectByRole = (role) => {
-  if (role?.toUpperCase() === 'DOCTOR') return '/doctor/onboarding';
-  const map = {
-    ADMIN: '/admin',
-    DOCTOR: '/doctor',
-    RECEPTIONIST: '/staff',
-    PATIENT: '/patient',
-  };
-  return map[role?.toUpperCase()] || '/';
-};
-
 const Register = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { isLoading, isAuthenticated, user, error, success } = useAppSelector((s) => s.auth);
+  const { isLoading, error} = useAppSelector((s) => s.auth);
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -33,12 +22,6 @@ const Register = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
-
-  useEffect(() => {
-    if (isAuthenticated && user?.role && success) {
-      navigate(redirectByRole(user.role), { replace: true });
-    }
-  }, [isAuthenticated, user, success, navigate]);
 
   useEffect(() => {
     if (error) {
@@ -80,8 +63,13 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    if(formData.role === 'DOCTOR') localStorage.setItem('doctor_onboarding_pending', 'true');
-    await dispatch(registerUser(formData));
+     const result = await dispatch(registerUser(formData));
+    if (registerUser.fulfilled.match(result)) {
+      localStorage.setItem('pending_verification_email', formData.email);
+      if (formData.role === 'DOCTOR') localStorage.setItem('doctor_onboarding_pending', 'true');
+      dispatch({ type: 'auth/clearAuth' });
+      navigate('/verify-email', { replace: true, state: { email: formData.email } });
+    }
   };
 
   return (

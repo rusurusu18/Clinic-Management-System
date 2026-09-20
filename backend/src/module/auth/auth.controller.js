@@ -97,6 +97,9 @@ export const login = async (req, res) => {
         if (error.message === MESSAGES.ACCOUNT_DISABLED) {
             return forbiddenResponse(res, error.message);
         }
+        if (error.message === 'EMAIL_NOT_VERIFIED') {
+            return forbiddenResponse(res, 'Please verify your email before signing in.');
+        }
         
         return errorResponse(res, error.message || 'Login failed');
     }

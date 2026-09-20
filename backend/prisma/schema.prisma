@@ -107,7 +107,7 @@ model User {
 
 model RefreshToken {
   id        String   @id @default(cuid())
-  token     String   @db.Text
+  token     String    @unique @db.VarChar(512)
   expiresAt DateTime
   revoked   Boolean  @default(false)
   revokedAt DateTime?
@@ -132,7 +132,7 @@ model RefreshToken {
 
 model Session {
   id           String   @id @default(cuid())
-  token        String   @db.Text
+  token        String   @unique @db.VarChar(512)
   isActive     Boolean  @default(true)
 
   ipAddress    String?
