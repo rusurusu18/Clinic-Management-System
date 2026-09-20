@@ -122,9 +122,10 @@ export const generateBill = async (billData) => {
         data: {
             userId: generatedBy,
             action: "CREATE",
-            description: `Bill ${billNumber} generated for patient ${patientId}. Total: NPR ${totalAmount}`,
-        },
-    });
+             resource: "Bill",
+            details: { billNumber, patientId, totalAmount },
+    },
+});
 
     return bill;
 };
@@ -307,7 +308,8 @@ export const cancelBill = async (billId, reason, cancelledBy) => {
         data: {
             userId: cancelledBy || existing.generatedBy,
             action: "UPDATE",
-            description: `Bill ${existing.billNumber} cancelled. Reason: ${reason || "N/A"}`,
+            resource: "Bill",
+            details: { billNumber: existing.billNumber, reason: reason || "N/A", status: "CANCELLED" },
         },
     });
 
@@ -340,8 +342,9 @@ export const deleteBill = async (billId, deletedBy) => {
         data: {
             userId: deletedBy || existing.generatedBy,
             action: "DELETE",
-            description: `Bill ${existing.billNumber} (NPR ${existing.totalAmount}) deleted`,
-        },
+            resource: "Bill",
+            details: { billNumber: existing.billNumber, totalAmount: existing.totalAmount },
+         },
     });
 
     return { message: `Bill ${existing.billNumber} deleted successfully` };

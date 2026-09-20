@@ -8,6 +8,7 @@ import Input from '../components/ui/Input.jsx';
 import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
 
 const redirectByRole = (role) => {
+  if (role?.toUpperCase() === 'DOCTOR') return '/doctor/onboarding';
   const map = {
     ADMIN: '/admin',
     DOCTOR: '/doctor',
@@ -58,7 +59,8 @@ const Register = () => {
     else if (!/^[+\d][\d\s-]{7,}$/.test(formData.phone.trim())) next.phone = 'Invalid phone format';
 
     if (!formData.password) next.password = 'Password is required';
-    else if (formData.password.length < 6) next.password = 'Password must be at least 6 characters';
+     else if (formData.password.length < 8) next.password = 'Password must be at least 8 characters';
+    else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(formData.password)) next.password = 'Use an uppercase letter, lowercase letter, and number';
 
     if (formData.password !== formData.confirmPassword)
       next.confirmPassword = 'Passwords do not match';
@@ -78,8 +80,8 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
-    const { confirmPassword, ...payload } = formData;
-    await dispatch(registerUser(payload));
+    if(formData.role === 'DOCTOR') localStorage.setItem('doctor_onboarding_pending', 'true');
+    await dispatch(registerUser(formData));
   };
 
   return (
@@ -164,10 +166,8 @@ const Register = () => {
             disabled={isLoading}
           >
             <option value="PATIENT">Patient</option>
+            <option value="DOCTOR">Doctor</option>
           </select>
-          <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-            Staff accounts are created by an administrator.
-          </p>
         </div>
 
         <Input

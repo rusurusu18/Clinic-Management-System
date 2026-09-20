@@ -66,6 +66,12 @@ export const createDoctor = async (doctorData, files = {}) => {
     return response.data.data;
 };
 
+export const submitDoctorOnboarding = async (doctorData, files = {}) => {
+    const payload = toMultipartPayload(doctorData, files);
+    const response = await axios.post(`${API_URL}/onboarding`, payload, requestConfig(payload));
+    return response.data.data;
+};
+
 export const updateDoctor = async (doctorId, updateData, files = {}) => {
     const payload = toMultipartPayload(updateData, files);
     const response = await axios.put(`${API_URL}/${doctorId}`, payload, requestConfig(payload));

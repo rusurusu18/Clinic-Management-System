@@ -49,6 +49,7 @@ import DoctorAppointments from '../pages/dashboard/doctor/DoctorAppointments';
 import DoctorPatients from '../pages/dashboard/doctor/DoctorPatients';
 import DoctorRecords from '../pages/dashboard/doctor/DoctorRecords';
 import DoctorSettings from '../pages/dashboard/doctor/DoctorSettings';
+import DoctorOnboarding from '../pages/DoctorOnboarding.jsx';
 
 import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
 
@@ -119,7 +120,8 @@ const GuestRoute = ({ children }) => {
   }
 
   if (isAuthenticated && user?.role) {
-    const redirect = ROLE_DASHBOARD_MAP[user.role.toUpperCase()] || '/';
+    const isNewDoctor = user.role.toUpperCase() === 'DOCTOR' && localStorage.getItem('doctor_onboarding_pending') === 'true';
+    const redirect = isNewDoctor ? '/doctor/onboarding' : ROLE_DASHBOARD_MAP[user.role.toUpperCase()] || '/';
     return <Navigate to={redirect} replace />;
   }
 
@@ -202,6 +204,7 @@ const router = createBrowserRouter([
     ),
     errorElement: <NotFound />,
     children: [
+       { path: 'onboarding', element: <DoctorOnboarding /> },
       { index: true, element: <DoctorOverview /> },
       { path: 'appointments', element: <DoctorAppointments /> },
       { path: 'patients', element: <DoctorPatients /> },
