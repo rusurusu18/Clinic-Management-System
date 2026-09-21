@@ -1,7 +1,7 @@
 import React, { useState, useMemo} from 'react';
 import { SearchX, ChevronLeft, ChevronRight } from 'lucide-react';
 import DoctorCard from './DoctorCard';
-import { useDoctorContext } from '../../utils/dummyData';
+import { useDoctorContext } from '../../hooks/useDoctorContext.js';
 
 const DoctorsList = ({ searchQuery, filters }) => {
   const { doctors, loading, error } = useDoctorContext();

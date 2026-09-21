@@ -55,8 +55,8 @@ import DoctorOnboarding from '../pages/DoctorOnboarding.jsx';
 
 import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
 
-import PatientForm from '../components/patients/PatientForm';
-import PatientDetails from '../components/patients/PatientDetails';
+import PatientForm from '../components/patient/PatientForm';
+import PatientDetails from '../components/patient/PatientDetails';
 
 const ROLE_DASHBOARD_MAP = {
   ADMIN: '/admin',
