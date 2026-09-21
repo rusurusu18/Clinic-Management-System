@@ -49,6 +49,7 @@ export const uploadMulterToCloudinary = async (files, options = {}) => {
     const uploadError = new Error('CLOUDINARY_UPLOAD_FAILED');
     uploadError.cause = details;
     throw uploadError;
+  }
 };
 
 
