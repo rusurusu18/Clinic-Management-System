@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BadgeCheck, FileUp, Stethoscope } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from '../components/ui/Button.jsx';
 import Input from '../components/ui/Input.jsx';
 import { submitDoctorOnboarding } from '../services/doctorService.js';
+import { getAllDepartments } from '../services/departmentService.js';
 
 const DoctorOnboarding = () => {
   const navigate = useNavigate();
@@ -20,7 +21,20 @@ const DoctorOnboarding = () => {
   });
   const [profilePicture, setProfilePicture] = useState(null);
   const [certificates, setCertificates] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const result = await getAllDepartments({ page: 1, limit: 100, isActive: true });
+        setDepartments(result.departments || result || []);
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Could not load departments.');
+      }
+    };
+    loadDepartments();
+  }, []);
 
   const handleChange = (event) => setForm((current) => ({ ...current, [event.target.name]: event.target.value }));
 
@@ -69,7 +83,13 @@ const DoctorOnboarding = () => {
           <Input label="Qualifications" name="qualifications" placeholder="MBBS, MD (comma-separated)" value={form.qualifications} onChange={handleChange} disabled={isSaving} />
           <Input label="Years of experience" name="experience" type="number" min="1" placeholder="5" value={form.experience} onChange={handleChange} disabled={isSaving} />
           <Input label="Hospital or clinic" name="hospital" placeholder="Where you practice" value={form.hospital} onChange={handleChange} disabled={isSaving} />
-          <Input label="Department" name="department" placeholder="Cardiology" value={form.department} onChange={handleChange} disabled={isSaving} />
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700 dark:text-slate-300" htmlFor="department">Department</label>
+            <select id="department" name="department" value={form.department} onChange={handleChange} disabled={isSaving} className="input w-full">
+              <option value="">Select a department</option>
+              {departments.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+            </select>
+          </div>
           <Input label="Consultation fee (NPR)" name="consultationFee" type="number" min="1" placeholder="1500" value={form.consultationFee} onChange={handleChange} disabled={isSaving} />
         </div>
 

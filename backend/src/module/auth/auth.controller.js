@@ -170,10 +170,12 @@ export const verifyAdminLogin = async (req, res) => {
 // Logout User
 export const logout = async (req, res) => {
     try {
-        const userId = req.user.id;
+        const userId = req.user?.id;
         const accessToken = req.cookies?.accessToken;
 
-        await authService.logoutUser(userId, accessToken);
+        if (userId) {
+            await authService.logoutUser(userId, accessToken);
+        }
         clearTokens(res);
 
         return successResponse(res, null, MESSAGES.USER_LOGGED_OUT);

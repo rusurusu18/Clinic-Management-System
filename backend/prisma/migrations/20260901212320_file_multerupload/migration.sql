@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
     `id` VARCHAR(191) NOT NULL,
     `email` VARCHAR(191) NOT NULL,
     `password` VARCHAR(191) NOT NULL,
@@ -20,7 +20,7 @@ CREATE TABLE `users` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `refresh_tokens` (
+CREATE TABLE IF NOT EXISTS `refresh_tokens` (
     `id` VARCHAR(191) NOT NULL,
     `token` TEXT NOT NULL,
     `expiresAt` DATETIME(3) NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE `refresh_tokens` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `sessions` (
+CREATE TABLE IF NOT EXISTS `sessions` (
     `id` VARCHAR(191) NOT NULL,
     `token` TEXT NOT NULL,
     `isActive` BOOLEAN NOT NULL DEFAULT true,
@@ -56,7 +56,7 @@ CREATE TABLE `sessions` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `otps` (
+CREATE TABLE IF NOT EXISTS `otps` (
     `id` VARCHAR(191) NOT NULL,
     `code` VARCHAR(191) NOT NULL,
     `type` ENUM('EMAIL_VERIFICATION', 'PASSWORD_RESET', 'LOGIN', 'PHONE_VERIFICATION') NOT NULL,
@@ -73,7 +73,7 @@ CREATE TABLE `otps` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `audit_logs` (
+CREATE TABLE IF NOT EXISTS `audit_logs` (
     `id` VARCHAR(191) NOT NULL,
     `action` ENUM('LOGIN', 'LOGOUT', 'REGISTER', 'CREATE', 'UPDATE', 'DELETE', 'PASSWORD_CHANGE', 'PASSWORD_CHANGED', 'PASSWORD_RESET', 'EMAIL_VERIFIED', 'PROFILE_UPDATED', 'ROLE_UPDATED', 'USER_STATUS_TOGGLED') NOT NULL,
     `description` TEXT NULL,
@@ -90,7 +90,7 @@ CREATE TABLE `audit_logs` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `patients` (
+CREATE TABLE IF NOT EXISTS `patients` (
     `id` VARCHAR(191) NOT NULL,
     `userId` VARCHAR(191) NOT NULL,
     `dateOfBirth` DATETIME(3) NULL,
@@ -115,7 +115,7 @@ CREATE TABLE `patients` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `departments` (
+CREATE TABLE IF NOT EXISTS `departments` (
     `id` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
     `description` VARCHAR(191) NULL,
@@ -133,7 +133,7 @@ CREATE TABLE `departments` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `doctors` (
+CREATE TABLE IF NOT EXISTS `doctors` (
     `id` VARCHAR(191) NOT NULL,
     `userId` VARCHAR(191) NOT NULL,
     `departmentId` VARCHAR(191) NULL,
@@ -155,7 +155,7 @@ CREATE TABLE `doctors` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `appointments` (
+CREATE TABLE IF NOT EXISTS `appointments` (
     `id` VARCHAR(191) NOT NULL,
     `patientId` VARCHAR(191) NOT NULL,
     `doctorId` VARCHAR(191) NOT NULL,
@@ -179,7 +179,7 @@ CREATE TABLE `appointments` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `medical_records` (
+CREATE TABLE IF NOT EXISTS `medical_records` (
     `id` VARCHAR(191) NOT NULL,
     `patientId` VARCHAR(191) NOT NULL,
     `doctorId` VARCHAR(191) NOT NULL,
@@ -196,7 +196,7 @@ CREATE TABLE `medical_records` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `prescriptions` (
+CREATE TABLE IF NOT EXISTS `prescriptions` (
     `id` VARCHAR(191) NOT NULL,
     `medicalRecordId` VARCHAR(191) NOT NULL,
     `medication` VARCHAR(191) NOT NULL,
@@ -215,7 +215,7 @@ CREATE TABLE `prescriptions` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `reports` (
+CREATE TABLE IF NOT EXISTS `reports` (
     `id` VARCHAR(191) NOT NULL,
     `medicalRecordId` VARCHAR(191) NOT NULL,
     `name` VARCHAR(191) NOT NULL,
@@ -232,7 +232,7 @@ CREATE TABLE `reports` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `bills` (
+CREATE TABLE IF NOT EXISTS `bills` (
     `id` VARCHAR(191) NOT NULL,
     `patientId` VARCHAR(191) NOT NULL,
     `appointmentId` VARCHAR(191) NULL,
@@ -257,7 +257,7 @@ CREATE TABLE `bills` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
-CREATE TABLE `payments` (
+CREATE TABLE IF NOT EXISTS `payments` (
     `id` VARCHAR(191) NOT NULL,
     `billId` VARCHAR(191) NOT NULL,
     `amount` DOUBLE NOT NULL,
@@ -275,21 +275,6 @@ CREATE TABLE `payments` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `refresh_tokens` ADD CONSTRAINT `refresh_tokens_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `sessions` ADD CONSTRAINT `sessions_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `otps` ADD CONSTRAINT `otps_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `audit_logs` ADD CONSTRAINT `audit_logs_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `patients` ADD CONSTRAINT `patients_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE `departments` ADD CONSTRAINT `departments_headDoctorId_fkey` FOREIGN KEY (`headDoctorId`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -297,12 +282,6 @@ ALTER TABLE `doctors` ADD CONSTRAINT `doctors_userId_fkey` FOREIGN KEY (`userId`
 
 -- AddForeignKey
 ALTER TABLE `doctors` ADD CONSTRAINT `doctors_departmentId_fkey` FOREIGN KEY (`departmentId`) REFERENCES `departments`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `appointments` ADD CONSTRAINT `appointments_patientId_fkey` FOREIGN KEY (`patientId`) REFERENCES `patients`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE `appointments` ADD CONSTRAINT `appointments_doctorId_fkey` FOREIGN KEY (`doctorId`) REFERENCES `doctors`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `medical_records` ADD CONSTRAINT `medical_records_patientId_fkey` FOREIGN KEY (`patientId`) REFERENCES `patients`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

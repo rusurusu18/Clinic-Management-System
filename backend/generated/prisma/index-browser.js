@@ -321,6 +321,7 @@ exports.Prisma.BillScalarFieldEnum = {
 exports.Prisma.PaymentScalarFieldEnum = {
   id: 'id',
   billId: 'billId',
+  appointmentId: 'appointmentId',
   amount: 'amount',
   method: 'method',
   transactionId: 'transactionId',
@@ -329,6 +330,7 @@ exports.Prisma.PaymentScalarFieldEnum = {
   status: 'status',
   refundedAt: 'refundedAt',
   refundReason: 'refundReason',
+  processedBy: 'processedBy',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -514,9 +516,11 @@ exports.Prisma.BillOrderByRelevanceFieldEnum = {
 exports.Prisma.PaymentOrderByRelevanceFieldEnum = {
   id: 'id',
   billId: 'billId',
+  appointmentId: 'appointmentId',
   transactionId: 'transactionId',
   notes: 'notes',
-  refundReason: 'refundReason'
+  refundReason: 'refundReason',
+  processedBy: 'processedBy'
 };
 
 exports.Prisma.ChatMessageOrderByRelevanceFieldEnum = {

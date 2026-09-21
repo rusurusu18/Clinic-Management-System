@@ -39,7 +39,7 @@ export const submitDoctorOnboarding = async (req, res) => {
     }
     return errorResponse(res, error.message || 'Failed to submit doctor documents');
   }
-};
+};  
 
 
 // ==================== GET ALL DOCTORS ====================

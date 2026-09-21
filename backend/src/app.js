@@ -1,8 +1,10 @@
 import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
 import router from './routes/index.js';
 import { ENV } from './config/env.js';
-import cors from 'cors';
 import {
   globalApiLimiter,
 } from './middleware/rateLimiter.js';
@@ -10,6 +12,7 @@ import sanitize from './middleware/sanitize.js';
 import helmetConfig, { extraSecurityHeaders, noCacheMiddleware } from './middleware/securityHeaders.js';
 
 const app = express();
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.set('trust proxy', ENV.NODE_ENV === 'production' ? 1 : 0);
 
@@ -53,9 +56,6 @@ app.use(
   })
 );
 
-
-app.options(/^(.*)$/, cors());
-
 // 3. Global API rate limiting
 app.use('/api', globalApiLimiter);
 
@@ -63,6 +63,10 @@ app.use('/api', globalApiLimiter);
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 app.use(cookieParser());
+
+if (ENV.NODE_ENV !== 'production') {
+  app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+}
 
 // 5. XSS + SQL injection sanitization on body/params/query
 app.use(sanitize);
@@ -84,19 +88,25 @@ app.use((req, res, next) => {
 // ROUTES
 // ============================================================
 
-app.use('/api',router);
+app.use('/api', router);
 
-// 404 Handler
+// ============================================================
+// 404
+// ============================================================
+
 app.use((req, res) => {
-   res.status(404).json({
+  res.status(404).json({
     success: false,
     message: `Route not found: ${req.method} ${req.originalUrl}`,
   });
 });
 
-// Global Error Handler
+// ============================================================
+// GLOBAL ERROR HANDLER
+// ============================================================
+
 app.use((err, req, res, next) => {
-    if (res.headersSent) return next(err);
+  if (res.headersSent) return next(err);
 
   const isProd = ENV.NODE_ENV === 'production';
 
@@ -108,6 +118,7 @@ app.use((err, req, res, next) => {
       code: 'DB_UNAVAILABLE',
     });
   }
+
   if (err?.name === 'PrismaClientKnownRequestError') {
     console.error('[Prisma Error]:', err.code, err.message);
     switch (err.code) {
@@ -139,7 +150,7 @@ app.use((err, req, res, next) => {
     }
   }
 
-   if (err?.name === 'ZodError') {
+  if (err?.name === 'ZodError') {
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
@@ -219,7 +230,7 @@ app.use((err, req, res, next) => {
 
   return res.status(err.status || 500).json({
     success: false,
-     message: isProd ? 'Something went wrong on the server.' : err.message,
+    message: isProd ? 'Something went wrong on the server.' : err.message,
     code: err.code || 'SERVER_ERROR',
     stack: isProd ? undefined : err.stack,
   });
