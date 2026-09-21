@@ -1,4 +1,4 @@
-Clinic Management System
+MediCare Clinic Management System
 MediCare is a full-stack clinic management system for clinics in Nepal. It provides public clinic pages, patient and doctor accounts, appointment management, medical records, billing, invoices, Nepali payment gateways, real-time events, and role-based dashboards.
 
 Current Stack
