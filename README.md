@@ -1,4 +1,4 @@
-# 🏥 MediCare — Clinic Management System
+# 🏥 Clinic Management System
 
 > A modern full-stack **Clinic Management System** built for clinics in Nepal, providing digital management of patients, doctors, appointments, medical records, billing, payments, and role-based clinic operations.
 
@@ -16,7 +16,7 @@
 
 ## 📖 About the Project
 
-**MediCare** is a full-stack clinic management platform designed to simplify and digitize everyday clinic operations.
+It is a full-stack clinic management platform designed to simplify and digitize everyday clinic operations.
 
 The system provides separate experiences for:
 
