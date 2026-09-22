@@ -51,7 +51,7 @@ const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { theme, toggleTheme } = useTheme();
-  const { isAuthenticated, useAppSelector } = useAppSelector((s) => s.auth);
+  const { isAuthenticated } = useAppSelector((s) => s.auth);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isServicesDropdownOpen, setIsServicesDropdownOpen] = useState(false);
@@ -62,6 +62,27 @@ const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    window.history.scrollRestoration = 'manual';
+    return () => {
+      window.history.scrollRestoration = 'auto';
+    };
+  }, []);
+
+  useEffect(() => {
+    const resetScroll = () => window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    resetScroll();
+    const frameId = requestAnimationFrame(resetScroll);
+    const timeoutId = window.setTimeout(resetScroll, 0);
+
+    return () => {
+      cancelAnimationFrame(frameId);
+      window.clearTimeout(timeoutId);
+    };
+  }, [location.pathname]);
+
+  const closeMobileMenu = () => setIsMenuOpen(false);
 
   useEffect(() => {
     const handleEscape = (e) => e.key === 'Escape' && setIsServicesDropdownOpen(false);
@@ -246,6 +267,7 @@ const Navbar = () => {
                   <Link
                     key={link.path}
                     to={link.path}
+                    onClick={closeMobileMenu}
                     className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
                       isActive(link.path)
                         ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-300'
@@ -265,6 +287,7 @@ const Navbar = () => {
                     <Link
                       key={service.path}
                       to={service.path}
+                      onClick={closeMobileMenu}
                       className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-white hover:text-primary-700 dark:text-slate-300 dark:hover:bg-slate-800"
                     >
                       <span>{service.emoji}</span>
@@ -277,7 +300,7 @@ const Navbar = () => {
               <div className="space-y-2 border-t border-slate-200/80 px-1 pt-3 dark:border-slate-800/80">
                 {isAuthenticated ? (
                   <>
-                    <Link to="/dashboard" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
+                    <Link to="/dashboard" onClick={closeMobileMenu} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
                       <LayoutDashboard className="h-4.5 w-4.5" /> Dashboard
                     </Link>
                     <button onClick={handleLogout} className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-danger hover:bg-rose-50 dark:hover:bg-rose-900/20">
@@ -286,10 +309,10 @@ const Navbar = () => {
                   </>
                 ) : (
                   <>
-                    <Link to="/login" className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
+                    <Link to="/login" onClick={closeMobileMenu} className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
                       <LogIn className="h-4.5 w-4.5" /> Login
                     </Link>
-                    <Link to="/book" className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-700 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-primary-500/25">
+                    <Link to="/book" onClick={closeMobileMenu} className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary-500 to-primary-700 px-4 py-3 text-sm font-semibold text-white shadow-md shadow-primary-500/25">
                       <CalendarPlus className="h-4.5 w-4.5" /> Book Appointment
                     </Link>
                   </>

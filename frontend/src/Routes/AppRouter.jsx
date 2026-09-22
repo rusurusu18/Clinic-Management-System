@@ -19,6 +19,8 @@ import Departments from '../pages/Departments.jsx';
 import DepartmentDetail from '../pages/DepartmentDetail.jsx';
 import About from '../pages/About';
 import Contact from '../pages/Contact';
+import Privacy from '../pages/Privacy';
+import Terms from '../pages/Terms';
 import NotFound from '../pages/Error';
 import Services from '../pages/Services';
 import ServiceDetail from '../pages/ServiceDetail';
@@ -150,6 +152,8 @@ const router = createBrowserRouter([
       { path: 'services/:serviceId', element: <RouteWrapper><ServiceDetail /></RouteWrapper> },
       { path: 'about', element: <RouteWrapper><About /></RouteWrapper> },
       { path: 'contact', element: <RouteWrapper><Contact /></RouteWrapper> },
+      { path: 'privacy', element: <RouteWrapper><Privacy /></RouteWrapper> },
+      { path: 'terms', element: <RouteWrapper><Terms /></RouteWrapper> },
       { path: 'book', element: <RouteWrapper><Booking /></RouteWrapper> },
       { path: 'home', element: <Navigate to="/" replace /> },
       { path: 'dashboard', element: <Navigate to={redirectByRole()} replace /> },

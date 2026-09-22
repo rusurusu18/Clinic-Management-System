@@ -1,4 +1,4 @@
-import React from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Stethoscope,
@@ -27,7 +27,7 @@ import HeroSection from '../components/doctors/HeroSection.jsx';
 import DoctorCard from '../components/doctors/DoctorCard';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { doctorsData } from '../utils/dummyData';
+import { useDoctorContext } from '../hooks/useDoctorContext.js';
 
 const specialties = [
   { icon: Heart, tone: 'rose', label: 'Cardiology', path: '/services/cardiology' },
@@ -79,11 +79,13 @@ const differentiators = [
   'Clear communication, transparent care plans, and dependable follow-up.',
 ];
 
-const featuredDoctors = [...doctorsData]
-  .sort((a, b) => b.rating - a.rating || b.reviews - a.reviews)
-  .slice(0, 3);
-
 const Home = () => {
+  const { doctors } = useDoctorContext();
+  const featuredDoctors = useMemo(
+    () => [...doctors].sort((a, b) => b.rating - a.rating || b.reviews - a.reviews).slice(0, 3),
+    [doctors]
+  );
+
   return (
     <div>
       <HeroSection />

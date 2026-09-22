@@ -1,12 +1,14 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Search, Filter, CalendarPlus, Globe, Building2, X, CheckCircle2 } from 'lucide-react';
 import SectionCard from '../../../components/sections/SectionCard';
 import StatusPill from '../../../components/sections/StatusPill';
 import { todaysAppointments as initialAppointments, currency } from '../../../utils/dashboardData';
+import { useDoctorContext } from '../../../hooks/useDoctorContext.js';
 
 const tabs = ['All', 'Booked', 'Checked-in', 'In progress', 'Completed', 'No-show'];
 
 const Appointments = () => {
+  const { doctors } = useDoctorContext();
   const [appointmentsList, setAppointmentsList] = useState(initialAppointments);
   const [tab, setTab] = useState('All');
   const [query, setQuery] = useState('');
@@ -15,10 +17,13 @@ const Appointments = () => {
 
   const [formData, setFormData] = useState({
     patient: '',
-    doctor: 'Dr. Ram Sharma (Cardiology)',
+    doctor: '',
     time: '11:00 AM',
     fee: '1500',
   });
+
+  const defaultDoctor = doctors[0] ? `${doctors[0].name} (${doctors[0].specialty})` : '';
+  const selectedDoctor = formData.doctor || defaultDoctor;
 
   const rows = useMemo(
     () =>
@@ -41,7 +46,7 @@ const Appointments = () => {
 
     const newId = `APT-${Math.floor(100 + Math.random() * 900)}`;
     const newToken = `TK-0${Math.floor(40 + Math.random() * 50)}`;
-    const [docName, dept] = formData.doctor.split(' (');
+    const [docName, dept] = selectedDoctor.split(' (');
 
     const newApt = {
       id: newId,
@@ -57,7 +62,7 @@ const Appointments = () => {
 
     setAppointmentsList([newApt, ...appointmentsList]);
     setIsModalOpen(false);
-    setFormData({ patient: '', doctor: 'Dr. Ram Sharma (Cardiology)', time: '11:00 AM', fee: '1500' });
+    setFormData({ patient: '', doctor: defaultDoctor, time: '11:00 AM', fee: '1500' });
     setSuccessMsg(`Appointment ${newId} booked for ${newApt.patient}!`);
     setTimeout(() => setSuccessMsg(''), 4000);
   };
@@ -195,13 +200,14 @@ const Appointments = () => {
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">Select Doctor</label>
                 <select
-                  value={formData.doctor}
+                  value={selectedDoctor}
                   onChange={(e) => setFormData({ ...formData, doctor: e.target.value })}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                 >
-                  <option value="Dr. Ram Sharma (Cardiology)">Dr. Ram Sharma (Cardiology)</option>
-                  <option value="Dr. Sita Gurung (Dermatology)">Dr. Sita Gurung (Dermatology)</option>
-                  <option value="Dr. Bijay Shrestha (Orthopedics)">Dr. Bijay Shrestha (Orthopedics)</option>
+                  {doctors.map((doctor) => {
+                    const optionValue = `${doctor.name} (${doctor.specialty})`;
+                    return <option key={doctor.id} value={optionValue}>{optionValue}</option>;
+                  })}
                 </select>
               </div>
 

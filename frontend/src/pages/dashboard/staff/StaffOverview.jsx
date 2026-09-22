@@ -18,10 +18,11 @@ import { Link } from 'react-router-dom';
 import SectionCard from '../../../components/sections/SectionCard';
 import StatusPill from '../../../components/sections/StatusPill';
 import { staffKpis, todaysAppointments, liveQueue, currency } from '../../../utils/dashboardData';
-import { doctorsData } from '../../../utils/dummyData';
+import { useDoctorContext } from '../../../hooks/useDoctorContext.js';
 import CustomDoctorSelect from '../../../components/ui/CustomDoctorSelect';
 
 const StaffOverview = () => {
+  const { doctors } = useDoctorContext();
   const [queueData, setQueueData] = useState(liveQueue);
   const [appointmentsList, setAppointmentsList] = useState(todaysAppointments);
   const [isRegisterOpen, setIsRegisterOpen] = useState(false);
@@ -34,15 +35,19 @@ const StaffOverview = () => {
     phone: '',
     age: '',
     gender: 'Male',
-    assignedDoctor: doctorsData[0]?.name || 'Dr. Ram Sharma',
+    assignedDoctor: '',
   });
 
   const [aptForm, setAptForm] = useState({
     patient: '',
-    doctor: 'Dr. Ram Sharma (Cardiology)',
+    doctor: '',
     time: '11:30 AM',
     fee: '1500',
   });
+
+  const defaultDoctor = doctors[0]?.name || '';
+  const defaultAppointmentDoctor = doctors[0] ? `${doctors[0].name} (${doctors[0].specialty})` : '';
+  const selectedAppointmentDoctor = aptForm.doctor || defaultAppointmentDoctor;
 
   const handleCallNext = (index) => {
     const updated = [...queueData];
@@ -69,7 +74,7 @@ const StaffOverview = () => {
       phone: '',
       age: '',
       gender: 'Male',
-      assignedDoctor: doctorsData[0]?.name || 'Dr. Ram Sharma',
+      assignedDoctor: defaultDoctor,
     });
     setTimeout(() => setToastMsg(''), 4000);
   };
@@ -80,7 +85,7 @@ const StaffOverview = () => {
 
     const newId = `APT-${Math.floor(100 + Math.random() * 900)}`;
     const newToken = `TK-0${Math.floor(40 + Math.random() * 50)}`;
-    const [docName, dept] = aptForm.doctor.split(' (');
+    const [docName, dept] = selectedAppointmentDoctor.split(' (');
 
     const newApt = {
       id: newId,
@@ -96,7 +101,12 @@ const StaffOverview = () => {
 
     setAppointmentsList([newApt, ...appointmentsList]);
     setIsAptModalOpen(false);
-    setAptForm({ patient: '', doctor: 'Dr. Ram Sharma (Cardiology)', time: '11:30 AM', fee: '1500' });
+    setAptForm({
+      patient: '',
+      doctor: defaultAppointmentDoctor,
+      time: '11:30 AM',
+      fee: '1500',
+    });
     setToastMsg(`New appointment ${newId} created for ${newApt.patient}!`);
     setTimeout(() => setToastMsg(''), 4000);
   };
@@ -256,7 +266,7 @@ const StaffOverview = () => {
                 />
               </div>
               <CustomDoctorSelect
-                value={patientForm.assignedDoctor}
+                value={patientForm.assignedDoctor || defaultDoctor}
                 onChange={(val) => setPatientForm({ ...patientForm, assignedDoctor: val })}
               />
               <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
@@ -297,13 +307,14 @@ const StaffOverview = () => {
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">Doctor</label>
                 <select
-                  value={aptForm.doctor}
+                  value={selectedAppointmentDoctor}
                   onChange={(e) => setAptForm({ ...aptForm, doctor: e.target.value })}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-primary-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                 >
-                  <option value="Dr. Ram Sharma (Cardiology)">Dr. Ram Sharma (Cardiology)</option>
-                  <option value="Dr. Sita Gurung (Dermatology)">Dr. Sita Gurung (Dermatology)</option>
-                  <option value="Dr. Bijay Shrestha (Orthopedics)">Dr. Bijay Shrestha (Orthopedics)</option>
+                  {doctors.map((doctor) => {
+                    const optionValue = `${doctor.name} (${doctor.specialty})`;
+                    return <option key={doctor.id} value={optionValue}>{optionValue}</option>;
+                  })}
                 </select>
               </div>
               <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, CheckCircle2, User, Calendar, Clock, CreditCard, ChevronLeft } from 'lucide-react';
-import { doctorsData } from '../utils/dummyData';
+import { ChevronRight, CheckCircle2, User, Calendar, CreditCard, ChevronLeft } from 'lucide-react';
+import { useDoctorContext } from '../hooks/useDoctorContext.js';
 import Button from '../components/ui/Button';
 
 const timeSlots = [
@@ -11,6 +11,7 @@ const timeSlots = [
 ];
 
 const Booking = () => {
+  const { doctors, loading: doctorsLoading, error: doctorsError } = useDoctorContext();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     doctorId: null,
@@ -31,7 +32,7 @@ const Booking = () => {
     setFormData((prev) => ({ ...prev, ...fields }));
   };
 
-  const selectedDoctor = doctorsData.find(d => d.id === formData.doctorId);
+  const selectedDoctor = doctors.find((doctor) => doctor.id === formData.doctorId);
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 dark:bg-slate-950">
@@ -80,8 +81,11 @@ const Booking = () => {
           {step === 1 && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <h2 className="mb-6 font-display text-xl font-bold text-slate-900 dark:text-white">1. Select a Doctor</h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {doctorsData.map((doc) => (
+              {doctorsLoading && <p className="py-10 text-center text-sm text-slate-500">Loading doctors...</p>}
+              {doctorsError && !doctorsLoading && <p className="py-10 text-center text-sm text-red-600">{doctorsError}</p>}
+              {!doctorsLoading && !doctorsError && doctors.length === 0 && <p className="py-10 text-center text-sm text-slate-500">No doctors are available for booking.</p>}
+              {!doctorsLoading && !doctorsError && doctors.length > 0 && <div className="grid gap-4 sm:grid-cols-2">
+                {doctors.map((doc) => (
                   <button
                     key={doc.id}
                     onClick={() => { updateData({ doctorId: doc.id }); nextStep(); }}
@@ -95,7 +99,7 @@ const Booking = () => {
                     </div>
                   </button>
                 ))}
-              </div>
+              </div>}
             </div>
           )}
 

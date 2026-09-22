@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Plus,
   MapPin,
@@ -15,7 +15,14 @@ import {
 import { Facebook, Twitter, Instagram, Linkedin, Youtube } from '../ui/BrandIcons';
 
 const Footer = () => {
+  const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
+
+  const handleQuickLinkClick = (event, path) => {
+    event.preventDefault();
+    navigate(path);
+    requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: 'instant' }));
+  };
 
   const quickLinks = [
     { path: '/', label: 'Home' },
@@ -78,7 +85,11 @@ const Footer = () => {
             <ul className="mt-4 space-y-2.5">
               {quickLinks.map((link) => (
                 <li key={link.path}>
-                  <Link to={link.path} className="group flex items-center gap-1.5 text-sm text-slate-400 transition-colors hover:text-white">
+                  <Link
+                    to={link.path}
+                    onClick={(event) => handleQuickLinkClick(event, link.path)}
+                    className="group flex items-center gap-1.5 text-sm text-slate-400 transition-colors hover:text-white"
+                  >
                     <ChevronRight className="h-3.5 w-3.5 text-primary-500 transition-transform group-hover:translate-x-0.5" />
                     {link.label}
                   </Link>

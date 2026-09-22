@@ -14,9 +14,10 @@ import {
   Volume2,
 } from 'lucide-react';
 import SectionCard from '../../../components/sections/SectionCard';
-import { doctorsData } from '../../../utils/dummyData';
+import { useDoctorContext } from '../../../hooks/useDoctorContext.js';
 
 const StaffSettings = () => {
+  const { doctors } = useDoctorContext();
   const [toastMsg, setToastMsg] = useState('');
 
   // Profile Form State
@@ -39,7 +40,7 @@ const StaffSettings = () => {
 
   // Operational Settings
   const [opSettings, setOpSettings] = useState({
-    defaultDoctor: doctorsData[0]?.name || 'Dr. Ram Sharma',
+    defaultDoctor: '',
     receiptFormat: 'Thermal 80mm POS',
     autoAdvanceMinutes: '15',
   });
@@ -139,11 +140,11 @@ const StaffSettings = () => {
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">Default Doctor View</label>
                 <select
-                  value={opSettings.defaultDoctor}
+                  value={opSettings.defaultDoctor || doctors[0]?.name || ''}
                   onChange={(e) => setOpSettings({ ...opSettings, defaultDoctor: e.target.value })}
                   className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium outline-none focus:border-primary-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white"
                 >
-                  {doctorsData.map((doc) => (
+                  {doctors.map((doc) => (
                     <option key={doc.id} value={doc.name}>{doc.name} ({doc.specialty})</option>
                   ))}
                 </select>

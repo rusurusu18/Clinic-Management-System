@@ -1,8 +1,8 @@
-import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, SearchX, Check, Stethoscope, CalendarDays, CalendarPlus, Heart, Sparkles } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
+import { useDoctorContext } from '../hooks/useDoctorContext.js';
 
 const serviceData = {
   cardiology: {
@@ -214,6 +214,7 @@ emergency: {
 const ServiceDetail = () => {
   const { serviceId } = useParams();
   const navigate = useNavigate();
+  const { doctors, loading: doctorsLoading } = useDoctorContext();
   const service = serviceData[serviceId];
 
   if (!service) {
@@ -236,6 +237,7 @@ const ServiceDetail = () => {
   }
 
   const { Icon } = service;
+  const serviceDoctors = doctors.filter((doctor) => doctor.specialty.toLowerCase() === service.title.toLowerCase());
 
   return (
     <div className="container-custom animate-fade-in-up py-10">
@@ -266,14 +268,16 @@ const ServiceDetail = () => {
               <Stethoscope className="h-5 w-5 text-primary-600" /> Available doctors
             </h3>
             <ul className="mt-3 space-y-2">
-              {service.doctors.map((d) => (
-                <li key={d} className="flex items-center gap-2.5 rounded-xl border border-slate-200/70 bg-slate-50/60 px-3.5 py-2.5 text-sm font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-300">
+              {doctorsLoading && <li className="text-sm text-slate-500">Loading doctors...</li>}
+              {!doctorsLoading && serviceDoctors.map((doctor) => (
+                <li key={doctor.id} className="flex items-center gap-2.5 rounded-xl border border-slate-200/70 bg-slate-50/60 px-3.5 py-2.5 text-sm font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-300">
                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300">
                     <Stethoscope className="h-4 w-4" />
                   </span>
-                  {d}
+                  {doctor.name}
                 </li>
               ))}
+              {!doctorsLoading && serviceDoctors.length === 0 && <li className="text-sm text-slate-500">No doctors are currently listed for this service.</li>}
             </ul>
           </div>
 

@@ -1,15 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check, Search, UserCheck } from 'lucide-react';
-import { doctorsData } from '../../utils/dummyData';
+import { useDoctorContext } from '../../hooks/useDoctorContext.js';
 
 const CustomDoctorSelect = ({ value, onChange, label = 'Attending / Known Doctor *' }) => {
+  const { doctors } = useDoctorContext();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const containerRef = useRef(null);
 
-  const selectedDoctor = doctorsData.find((d) => d.name === value) || doctorsData[0];
+  const selectedDoctor = doctors.find((doctor) => doctor.name === value) || doctors[0];
 
-  const filteredDoctors = doctorsData.filter(
+  const filteredDoctors = doctors.filter(
     (d) =>
       d.name.toLowerCase().includes(search.toLowerCase()) ||
       d.specialty.toLowerCase().includes(search.toLowerCase()) ||
@@ -41,8 +42,8 @@ const CustomDoctorSelect = ({ value, onChange, label = 'Attending / Known Doctor
             <UserCheck className="h-4 w-4" />
           </span>
           <div className="truncate">
-            <span className="font-semibold text-slate-900 dark:text-white">{selectedDoctor.name}</span>
-            <span className="ml-2 text-xs font-normal text-slate-500 dark:text-slate-400">({selectedDoctor.specialty})</span>
+            <span className="font-semibold text-slate-900 dark:text-white">{selectedDoctor?.name || 'No doctors available'}</span>
+            {selectedDoctor && <span className="ml-2 text-xs font-normal text-slate-500 dark:text-slate-400">({selectedDoctor.specialty})</span>}
           </div>
         </div>
         <ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Star, Briefcase, Wallet, UserPlus, MoreHorizontal } from 'lucide-react';
 import SectionCard from '../../../components/sections/SectionCard';
-import { doctorsData } from '../../../utils/dummyData';
+import { useDoctorContext } from '../../../hooks/useDoctorContext.js';
 import { currency } from '../../../utils/dashboardData';
 
 const availabilityTone = {
@@ -10,15 +10,19 @@ const availabilityTone = {
   'Next Week': 'badge-warning',
 };
 
-const Doctors = () => (
-  <div className="space-y-5">
+const Doctors = () => {
+  const { doctors, loading, error } = useDoctorContext();
+
+  return <div className="space-y-5">
     <div className="flex items-center justify-between">
-      <p className="text-sm text-slate-500">{doctorsData.length} specialists across {new Set(doctorsData.map((d) => d.specialty)).size} departments</p>
+      <p className="text-sm text-slate-500">{doctors.length} specialists across {new Set(doctors.map((doctor) => doctor.specialty)).size} departments</p>
       <button className="btn btn-primary btn-sm"><UserPlus className="h-4 w-4" /> Add doctor</button>
     </div>
 
-    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-      {doctorsData.map((d) => (
+    {loading && <p className="py-12 text-center text-sm text-slate-500">Loading doctors...</p>}
+    {error && !loading && <p className="py-12 text-center text-sm text-red-600">{error}</p>}
+    {!loading && !error && <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+      {doctors.map((d) => (
         <div key={d.id} className="card card-hover p-5">
           <div className="flex items-start gap-3">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary-400 to-primary-700 text-sm font-bold text-white">
@@ -56,8 +60,8 @@ const Doctors = () => (
           </div>
         </div>
       ))}
-    </div>
-  </div>
-);
+    </div>}
+  </div>;
+};
 
 export default Doctors;
