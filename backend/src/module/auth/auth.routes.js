@@ -10,7 +10,6 @@ const router = express.Router();
 router.post("/register", authController.register);
 router.post("/login", authController.login);
 router.post('/admin/login', authController.adminLogin);
-router.post('/admin/verify-login', authController.verifyAdminLogin);
 
 // Email Verification
 router.post("/verify-email", authController.verifyEmail);
