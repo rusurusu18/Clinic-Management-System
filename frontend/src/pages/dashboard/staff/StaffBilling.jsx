@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getBillById } from '../../../services/paymentServices';
+import { getBill } from '../../../services/billingService';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import PaymentModal from '../../../components/ui/PaymentModal';
 import toast from 'react-hot-toast';
@@ -28,7 +28,7 @@ const StaffBilling = () => {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await getBillById(id);
+      const data = await getBill(id);
       setBill(data);
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to fetch bill';
