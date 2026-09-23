@@ -3,7 +3,7 @@ services:
     name: clinic-management-api
     runtime: node
     rootDir: backend
-    buildCommand: npm install
+    buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
