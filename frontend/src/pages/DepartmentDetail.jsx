@@ -33,7 +33,7 @@ const DepartmentDetail = () => {
   }
 
   const doctors = department.doctors || [];
-  const headDoctor = department.headDoctor?.user?.fullName;
+  const headDoctor = department.headDoctor?.fullName || department.headDoctor?.user?.fullName;
 
   return (
     <div className="container-custom animate-fade-in-up py-10">

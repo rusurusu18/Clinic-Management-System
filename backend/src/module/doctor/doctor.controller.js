@@ -84,6 +84,27 @@ export const getDoctorByUserId = async (req, res) => {
   }
 };
 
+// ==================== UPDATE CURRENT DOCTOR PROFILE PICTURE ====================
+export const updateDoctorProfilePicture = async (req, res) => {
+  try {
+    if (!req.file) {
+      return errorResponse(res, 'No profile picture file provided', 400);
+    }
+
+    const doctor = await doctorService.updateDoctorProfilePicture(req.user.id, req.file);
+    return successResponse(res, doctor, 'Doctor profile picture updated successfully');
+  } catch (error) {
+    console.error('Update doctor profile picture error:', error);
+    if (error.message === 'Doctor not found for this user') {
+      return notFoundResponse(res, error.message);
+    }
+    if (error.message === 'CLOUDINARY_UPLOAD_FAILED') {
+      return errorResponse(res, 'File storage is temporarily unavailable. Please try again later or contact support.', 503);
+    }
+    return errorResponse(res, error.message || 'Failed to update doctor profile picture');
+  }
+};
+
 // ==================== UPDATE DOCTOR ====================
 export const updateDoctor = async (req, res) => {
   try {

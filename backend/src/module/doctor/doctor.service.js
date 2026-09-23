@@ -174,6 +174,20 @@ export const getDoctorByUserId = async (userId) => {
   return doctor;
 };
 
+// ==================== UPDATE CURRENT DOCTOR PROFILE PICTURE ====================
+export const updateDoctorProfilePicture = async (userId, file) => {
+  const doctor = await prisma.doctor.findUnique({ where: { userId } });
+  if (!doctor) throw new Error('Doctor not found for this user');
+
+  const profileResult = await uploadToCloudinarySingle(file, 'healthcare/doctors/profile');
+  await prisma.user.update({
+    where: { id: userId },
+    data: { avatar: profileResult.url },
+  });
+
+  return getDoctorByUserId(userId);
+};
+
 // ==================== UPDATE DOCTOR ====================
 /**
  * @param {string} doctorId

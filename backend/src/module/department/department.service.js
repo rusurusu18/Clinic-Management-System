@@ -1,5 +1,4 @@
 import prisma from "../../config/database.js";
-import { Prisma } from "@prisma/client";
 
 // create department 
 export const createDepartment = async (departmentData, createdBy) => {

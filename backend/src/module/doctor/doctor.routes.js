@@ -10,7 +10,7 @@ import {
 import {verifyToken, authorize} from '../../middleware/authMiddleware.js'
 import { validate } from '../../middleware/validateMiddleware.js'
 import { ROLES } from '../../constants/roles.js';
-import { uploadFields } from '../../config/multer.js';
+import { uploadAvatar, uploadFields } from '../../config/multer.js';
 import { handleMulterError } from '../../middleware/multerMiddleware.js';
 
 const router = express.Router();
@@ -43,6 +43,15 @@ router.get(
 
 // Get current user's doctor profile
 router.get('/me', authorize(ROLES.DOCTOR), doctorController.getDoctorByUserId);
+
+// Update current doctor's profile picture
+router.put(
+  '/me/profile-picture',
+  authorize(ROLES.DOCTOR),
+  uploadAvatar,
+  handleMulterError,
+  doctorController.updateDoctorProfilePicture
+);
 
 router.post(
   '/onboarding',
