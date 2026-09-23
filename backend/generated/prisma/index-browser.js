@@ -136,55 +136,6 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.RefreshTokenScalarFieldEnum = {
-  id: 'id',
-  token: 'token',
-  expiresAt: 'expiresAt',
-  revoked: 'revoked',
-  revokedAt: 'revokedAt',
-  userId: 'userId',
-  userAgent: 'userAgent',
-  ipAddress: 'ipAddress',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.SessionScalarFieldEnum = {
-  id: 'id',
-  token: 'token',
-  isActive: 'isActive',
-  ipAddress: 'ipAddress',
-  userAgent: 'userAgent',
-  expiresAt: 'expiresAt',
-  lastActivity: 'lastActivity',
-  userId: 'userId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.OTPScalarFieldEnum = {
-  id: 'id',
-  code: 'code',
-  type: 'type',
-  expiresAt: 'expiresAt',
-  verified: 'verified',
-  attempts: 'attempts',
-  userId: 'userId',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.AuditLogScalarFieldEnum = {
-  id: 'id',
-  action: 'action',
-  description: 'description',
-  details: 'details',
-  ipAddress: 'ipAddress',
-  userAgent: 'userAgent',
-  userId: 'userId',
-  createdAt: 'createdAt'
-};
-
 exports.Prisma.PatientScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -206,20 +157,6 @@ exports.Prisma.PatientScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.DepartmentScalarFieldEnum = {
-  id: 'id',
-  name: 'name',
-  description: 'description',
-  headDoctorId: 'headDoctorId',
-  hospital: 'hospital',
-  phone: 'phone',
-  email: 'email',
-  location: 'location',
-  isActive: 'isActive',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
 exports.Prisma.DoctorScalarFieldEnum = {
   id: 'id',
   userId: 'userId',
@@ -234,6 +171,21 @@ exports.Prisma.DoctorScalarFieldEnum = {
   bio: 'bio',
   rating: 'rating',
   totalReviews: 'totalReviews',
+  certificates: 'certificates',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.DepartmentScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  description: 'description',
+  headDoctorId: 'headDoctorId',
+  hospital: 'hospital',
+  phone: 'phone',
+  email: 'email',
+  location: 'location',
+  isActive: 'isActive',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -360,6 +312,52 @@ exports.Prisma.NotificationScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.RefreshTokenScalarFieldEnum = {
+  id: 'id',
+  token: 'token',
+  userId: 'userId',
+  userAgent: 'userAgent',
+  ipAddress: 'ipAddress',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  revoked: 'revoked',
+  revokedAt: 'revokedAt'
+};
+
+exports.Prisma.SessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  token: 'token',
+  userAgent: 'userAgent',
+  ipAddress: 'ipAddress',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  lastActivity: 'lastActivity',
+  isActive: 'isActive'
+};
+
+exports.Prisma.OTPScalarFieldEnum = {
+  id: 'id',
+  email: 'email',
+  otp: 'otp',
+  type: 'type',
+  expiresAt: 'expiresAt',
+  createdAt: 'createdAt',
+  isUsed: 'isUsed',
+  userId: 'userId'
+};
+
+exports.Prisma.AuditLogScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  action: 'action',
+  resource: 'resource',
+  details: 'details',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -389,28 +387,6 @@ exports.Prisma.UserOrderByRelevanceFieldEnum = {
   lastLoginIP: 'lastLoginIP'
 };
 
-exports.Prisma.RefreshTokenOrderByRelevanceFieldEnum = {
-  id: 'id',
-  token: 'token',
-  userId: 'userId',
-  userAgent: 'userAgent',
-  ipAddress: 'ipAddress'
-};
-
-exports.Prisma.SessionOrderByRelevanceFieldEnum = {
-  id: 'id',
-  token: 'token',
-  ipAddress: 'ipAddress',
-  userAgent: 'userAgent',
-  userId: 'userId'
-};
-
-exports.Prisma.OTPOrderByRelevanceFieldEnum = {
-  id: 'id',
-  code: 'code',
-  userId: 'userId'
-};
-
 exports.Prisma.JsonNullValueFilter = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull,
@@ -420,14 +396,6 @@ exports.Prisma.JsonNullValueFilter = {
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
-};
-
-exports.Prisma.AuditLogOrderByRelevanceFieldEnum = {
-  id: 'id',
-  description: 'description',
-  ipAddress: 'ipAddress',
-  userAgent: 'userAgent',
-  userId: 'userId'
 };
 
 exports.Prisma.PatientOrderByRelevanceFieldEnum = {
@@ -443,6 +411,16 @@ exports.Prisma.PatientOrderByRelevanceFieldEnum = {
   insuranceNumber: 'insuranceNumber'
 };
 
+exports.Prisma.DoctorOrderByRelevanceFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  departmentId: 'departmentId',
+  specialization: 'specialization',
+  licenseNumber: 'licenseNumber',
+  hospital: 'hospital',
+  bio: 'bio'
+};
+
 exports.Prisma.DepartmentOrderByRelevanceFieldEnum = {
   id: 'id',
   name: 'name',
@@ -452,16 +430,6 @@ exports.Prisma.DepartmentOrderByRelevanceFieldEnum = {
   phone: 'phone',
   email: 'email',
   location: 'location'
-};
-
-exports.Prisma.DoctorOrderByRelevanceFieldEnum = {
-  id: 'id',
-  userId: 'userId',
-  departmentId: 'departmentId',
-  specialization: 'specialization',
-  licenseNumber: 'licenseNumber',
-  hospital: 'hospital',
-  bio: 'bio'
 };
 
 exports.Prisma.AppointmentOrderByRelevanceFieldEnum = {
@@ -539,34 +507,43 @@ exports.Prisma.NotificationOrderByRelevanceFieldEnum = {
   type: 'type',
   link: 'link'
 };
+
+exports.Prisma.RefreshTokenOrderByRelevanceFieldEnum = {
+  id: 'id',
+  token: 'token',
+  userId: 'userId',
+  userAgent: 'userAgent',
+  ipAddress: 'ipAddress'
+};
+
+exports.Prisma.SessionOrderByRelevanceFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  token: 'token',
+  userAgent: 'userAgent',
+  ipAddress: 'ipAddress'
+};
+
+exports.Prisma.OTPOrderByRelevanceFieldEnum = {
+  id: 'id',
+  email: 'email',
+  otp: 'otp',
+  userId: 'userId'
+};
+
+exports.Prisma.AuditLogOrderByRelevanceFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  action: 'action',
+  resource: 'resource',
+  ipAddress: 'ipAddress',
+  userAgent: 'userAgent'
+};
 exports.Role = exports.$Enums.Role = {
-  PATIENT: 'PATIENT',
-  DOCTOR: 'DOCTOR',
   ADMIN: 'ADMIN',
+  DOCTOR: 'DOCTOR',
+  PATIENT: 'PATIENT',
   RECEPTIONIST: 'RECEPTIONIST'
-};
-
-exports.OTPType = exports.$Enums.OTPType = {
-  EMAIL_VERIFICATION: 'EMAIL_VERIFICATION',
-  PASSWORD_RESET: 'PASSWORD_RESET',
-  LOGIN: 'LOGIN',
-  PHONE_VERIFICATION: 'PHONE_VERIFICATION'
-};
-
-exports.AuditAction = exports.$Enums.AuditAction = {
-  LOGIN: 'LOGIN',
-  LOGOUT: 'LOGOUT',
-  REGISTER: 'REGISTER',
-  CREATE: 'CREATE',
-  UPDATE: 'UPDATE',
-  DELETE: 'DELETE',
-  PASSWORD_CHANGE: 'PASSWORD_CHANGE',
-  PASSWORD_CHANGED: 'PASSWORD_CHANGED',
-  PASSWORD_RESET: 'PASSWORD_RESET',
-  EMAIL_VERIFIED: 'EMAIL_VERIFIED',
-  PROFILE_UPDATED: 'PROFILE_UPDATED',
-  ROLE_UPDATED: 'ROLE_UPDATED',
-  USER_STATUS_TOGGLED: 'USER_STATUS_TOGGLED'
 };
 
 exports.Gender = exports.$Enums.Gender = {
@@ -618,9 +595,9 @@ exports.BillStatus = exports.$Enums.BillStatus = {
 };
 
 exports.PaymentMethod = exports.$Enums.PaymentMethod = {
-  CASH: 'CASH',
+  ESEWA: 'ESEWA',
   KHALTI: 'KHALTI',
-  ESEWA: 'ESEWA'
+  CASH: 'CASH'
 };
 
 exports.PaymentStatus = exports.$Enums.PaymentStatus = {
@@ -630,15 +607,16 @@ exports.PaymentStatus = exports.$Enums.PaymentStatus = {
   REFUNDED: 'REFUNDED'
 };
 
+exports.OTPType = exports.$Enums.OTPType = {
+  EMAIL_VERIFICATION: 'EMAIL_VERIFICATION',
+  PASSWORD_RESET: 'PASSWORD_RESET'
+};
+
 exports.Prisma.ModelName = {
   User: 'User',
-  RefreshToken: 'RefreshToken',
-  Session: 'Session',
-  OTP: 'OTP',
-  AuditLog: 'AuditLog',
   Patient: 'Patient',
-  Department: 'Department',
   Doctor: 'Doctor',
+  Department: 'Department',
   Appointment: 'Appointment',
   MedicalRecord: 'MedicalRecord',
   Prescription: 'Prescription',
@@ -646,7 +624,11 @@ exports.Prisma.ModelName = {
   Bill: 'Bill',
   Payment: 'Payment',
   ChatMessage: 'ChatMessage',
-  Notification: 'Notification'
+  Notification: 'Notification',
+  RefreshToken: 'RefreshToken',
+  Session: 'Session',
+  OTP: 'OTP',
+  AuditLog: 'AuditLog'
 };
 
 /**
