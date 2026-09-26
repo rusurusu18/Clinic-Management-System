@@ -7,6 +7,7 @@ dotenv.config();
 const { PrismaClient } = PrismaClientModule;
 
 const DATABASE_URL = process.env.DATABASE_URL;
+const DATABASE_CA_CERT = process.env.DATABASE_CA_CERT?.replace(/\\n/g, "\n").trim();
 
 console.log(
     "DATABASE_URL:",
@@ -32,6 +33,7 @@ function parseDbUrl(url) {
             user: decodeURIComponent(parsed.username),
             password: decodeURIComponent(parsed.password),
             database: parsed.pathname.replace(/^\/+/, "").split("?")[0],
+            sslMode: parsed.searchParams.get("ssl-mode")?.toUpperCase(),
         };
     } catch (error) {
         console.error("Failed to parse DATABASE_URL:", error.message);
@@ -58,6 +60,9 @@ const adapter = new PrismaMariaDb({
     user: dbConfig.user,
     password: dbConfig.password,
     database: dbConfig.database,
+    ...(dbConfig.sslMode && dbConfig.sslMode !== "DISABLED"
+        ? { ssl: DATABASE_CA_CERT ? { ca: DATABASE_CA_CERT } : true }
+        : {}),
 
     connectionLimit: 5,
     connectTimeout: 5000,
