@@ -45,8 +45,9 @@ export const serverErrorResponse = (res, message = 'Internal server error') => {
 
 // Zod validation error handler
 export const handleZodError = (res, error) => {
-  if (error instanceof ZodError) {
-    const errors = error.errors.map(err => ({
+  if (error?.name === 'ZodError' || error instanceof ZodError) {
+    const issues = error.issues || error.errors || [];
+    const errors = issues.map(err => ({
       field: err.path.join('.'),
       message: err.message,
     }));
