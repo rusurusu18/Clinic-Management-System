@@ -25,9 +25,7 @@ router.get("/health",(req,res)=>{
 })
 
 // ==================== AUTH ROUTES (PUBLIC — login / register / reset) ====================
-// Self-registration endpoint at /api/auth/register is restricted to PATIENT only.
-// Admin / Doctor / Receptionist accounts MUST be provisioned by an existing Admin
-// using the /api/admin or /api/staff endpoints below.
+// Public signup supports patients and doctors; doctor accounts complete onboarding after email verification.
 router.use("/auth",authRoutes)
 
 // ==================== ADMIN ONLY ROUTES ====================

@@ -10,6 +10,12 @@ export const successResponse = (res, data, message = 'Success', statusCode = STA
 };
 
 export const errorResponse = (res, message = 'Error', statusCode = STATUS_CODES.BAD_REQUEST, errors = null) => {
+  const databaseUnavailable = /pool timeout|failed to retrieve a connection|database error\. code:\s*`?45028|can't reach database server|ECONNREFUSED|ETIMEDOUT/i.test(String(message));
+  if (databaseUnavailable) {
+    message = 'Database service is temporarily unavailable. Please try again later.';
+    statusCode = STATUS_CODES.SERVICE_UNAVAILABLE;
+  }
+
   const response = { success: false, message };
   if (errors) response.errors = errors;
   return res.status(statusCode).json(response);

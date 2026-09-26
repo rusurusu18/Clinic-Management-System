@@ -38,7 +38,11 @@ export const getAllDoctors = async (params = {}) => {
 };
 
 export const getAllPublicDoctors = async (params = {}) => {
-    const response = await axios.get(`${API_URL}/public`, { params });
+    const response = await axios.get(`${API_URL}/public`, {
+        params,
+        skipAuth: true,
+        withCredentials: false,
+    });
     return response.data.data;
 };
 
@@ -48,7 +52,10 @@ export const getDoctorById = async (doctorId) => {
 };
 
 export const getPublicDoctorById = async (doctorId) => {
-    const response = await axios.get(`${API_URL}/public/${doctorId}`);
+    const response = await axios.get(`${API_URL}/public/${doctorId}`, {
+        skipAuth: true,
+        withCredentials: false,
+    });
     return response.data.data;
 };
 

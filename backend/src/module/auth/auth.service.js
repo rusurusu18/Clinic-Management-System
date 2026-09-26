@@ -33,15 +33,23 @@ export const registerUser = async (userData) => {
     // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Create user - REMOVED profile creation
-    const newUser = await prisma.user.create({
-        data: {
-            fullName,
-            email,
-            phone,
-            password: hashedPassword,
-            role: role ? role.toUpperCase() : "PATIENT",
+    const normalizedRole = role ? role.toUpperCase() : "PATIENT";
+    const newUser = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.create({
+            data: {
+                fullName,
+                email,
+                phone,
+                password: hashedPassword,
+                role: normalizedRole,
+            }
+        });
+
+        if (normalizedRole === "PATIENT") {
+            await tx.patient.create({ data: { userId: user.id } });
         }
+
+        return user;
     });
 
     // Send OTP for email verification

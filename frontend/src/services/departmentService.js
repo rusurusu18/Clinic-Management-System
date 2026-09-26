@@ -3,17 +3,28 @@ import axios from '../utils/axios.js';
 const API_URL = '/department';
 
 export const getAllDepartments = async (params = {}) => {
-  const response = await axios.get(API_URL, { params });
+  const response = await axios.get(API_URL, {
+    params,
+    skipAuth: true,
+    withCredentials: false,
+  });
   return response.data.data;
 };
 
 export const getDepartmentById = async (departmentId) => {
-  const response = await axios.get(`${API_URL}/${departmentId}`);
+  const response = await axios.get(`${API_URL}/${departmentId}`, {
+    skipAuth: true,
+    withCredentials: false,
+  });
   return response.data.data;
 };
 
 export const getDepartmentDoctors = async (departmentId, params = {}) => {
-  const response = await axios.get(`${API_URL}/${departmentId}/doctors`, { params });
+  const response = await axios.get(`${API_URL}/${departmentId}/doctors`, {
+    params,
+    skipAuth: true,
+    withCredentials: false,
+  });
   return response.data.data;
 };
 

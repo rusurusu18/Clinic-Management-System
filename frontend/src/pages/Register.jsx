@@ -16,7 +16,7 @@ const Register = () => {
     fullName: '',
     email: '',
     phone: '',
-    role:'Patient',
+    role:'PATIENT',
     password: '',
     confirmPassword: '',
   });
