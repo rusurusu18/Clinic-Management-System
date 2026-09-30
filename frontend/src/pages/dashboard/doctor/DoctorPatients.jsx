@@ -55,7 +55,9 @@ const DoctorPatients = () => {
   }, [dispatch]);
 
   const patientsList = useMemo(() => patients.map(toPatientRow), [patients]);
-  const selectedDetail = selectedPatient?.id === selected?.id ? toPatientRow(selectedPatient) : selected;
+  const selectedDetail = selectedPatient && selected?.id === selectedPatient.id
+    ? toPatientRow(selectedPatient)
+    : selected;
 
   useEffect(() => {
     if (!selected && patientsList.length > 0) {
