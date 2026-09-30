@@ -49,7 +49,7 @@ export const revenueTrend = [
 
 // --- Booking source split (public website vs staff) --------
 export const bookingSource = [
-  { label: 'Public website', value: 312, color: '#0d9488' },
+  { label: 'Public website', value: 312, color: '#2563eb' },
   { label: 'Staff / walk-in', value: 168, color: '#38bdf8' },
 ];
 

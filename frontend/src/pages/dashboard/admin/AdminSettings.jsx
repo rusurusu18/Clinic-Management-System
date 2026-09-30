@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Building2, Bell, CreditCard, Save } from 'lucide-react';
 import SectionCard from '../../../components/sections/SectionCard';
 
@@ -31,11 +31,11 @@ const Settings = () => {
           <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-slate-800/50">
             <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-600 text-white"><Building2 className="h-6 w-6" /></span>
             <div>
-              <p className="font-bold text-slate-900 dark:text-white">MediCare Clinic</p>
+              <p className="font-bold text-slate-900 dark:text-white">AsterCare Clinic</p>
               <p className="text-xs text-slate-400">Chabahil, Kathmandu</p>
             </div>
           </div>
-          <Field label="Clinic name" defaultValue="MediCare Clinic" />
+          <Field label="Clinic name" defaultValue="AsterCare Clinic" />
           <Field label="Phone" defaultValue="+977-1-444-5678" />
           <Field label="Email" defaultValue="hello@medicare.com.np" />
           <Field label="Address" defaultValue="Chabahil, Kathmandu, Nepal" />

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, UserCircle, Phone, UserPlus, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, UserCircle, Phone, UserPlus } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../hooks/authHooks.js';
 import { registerUser, clearError } from '../Redux/slices/authSlice.js';
 import Button from '../components/ui/Button.jsx';
@@ -65,10 +65,9 @@ const Register = () => {
     if (!validate()) return;
      const result = await dispatch(registerUser(formData));
     if (registerUser.fulfilled.match(result)) {
-      localStorage.setItem('pending_verification_email', formData.email);
       if (formData.role === 'DOCTOR') localStorage.setItem('doctor_onboarding_pending', 'true');
       dispatch({ type: 'auth/clearAuth' });
-      navigate('/verify-email', { replace: true, state: { email: formData.email } });
+      navigate('/login', { replace: true, state: { registered: true, email: formData.email } });
     }
   };
 

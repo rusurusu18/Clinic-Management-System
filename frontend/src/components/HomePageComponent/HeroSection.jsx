@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Search, Check, Clock, Stethoscope, ArrowRight, Siren, HeartPulse } from 'lucide-react';
 import Carousel from '../ui/Carousel';
@@ -94,7 +94,7 @@ const HeroSection = () => {
 
   return (
     <section
-      className="relative overflow-hidden bg-[linear-gradient(135deg,_#022c22_0%,_#0f766e_48%,_#0d9488_100%)] py-20 text-white lg:py-28"
+      className="relative overflow-hidden bg-[linear-gradient(135deg,_#102a56_0%,_#1d4ed8_48%,_#60a5fa_100%)] py-20 text-white lg:py-28"
       id="hero-section"
     >
       <style>{`

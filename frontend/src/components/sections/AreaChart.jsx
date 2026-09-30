@@ -1,4 +1,4 @@
-import React, { useId, useState } from 'react';
+import { useId, useState } from 'react';
 
 /**
  * Dependency-free stacked-ish area chart (two series).
@@ -33,8 +33,8 @@ const AreaChart = ({ data, height = 220 }) => {
       <svg viewBox={`0 0 ${w} ${h}`} className="w-full" preserveAspectRatio="none" style={{ height }}>
         <defs>
           <linearGradient id={`area-${gid}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#0d9488" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="#0d9488" stopOpacity="0" />
+            <stop offset="0%" stopColor="#2563eb" stopOpacity="0.35" />
+            <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
           </linearGradient>
         </defs>
 
@@ -53,7 +53,7 @@ const AreaChart = ({ data, height = 220 }) => {
 
         {/* total area (online + cash) */}
         <path d={areaPath(totalAcc)} fill={`url(#area-${gid})`} />
-        <path d={linePath(totalAcc)} fill="none" stroke="#0d9488" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+        <path d={linePath(totalAcc)} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
         {/* online line */}
         <path d={linePath((d) => d.online)} fill="none" stroke="#38bdf8" strokeWidth="2" strokeDasharray="4 4" strokeLinecap="round" opacity="0.9" />
 
@@ -64,7 +64,7 @@ const AreaChart = ({ data, height = 220 }) => {
             {hover === i && (
               <>
                 <line x1={x(i)} x2={x(i)} y1={padTop} y2={h - padBottom} className="stroke-slate-300 dark:stroke-slate-600" strokeWidth="1" />
-                <circle cx={x(i)} cy={y(totalAcc(d))} r="4.5" fill="#0d9488" stroke="#fff" strokeWidth="2" />
+                <circle cx={x(i)} cy={y(totalAcc(d))} r="4.5" fill="#2563eb" stroke="#fff" strokeWidth="2" />
               </>
             )}
           </g>

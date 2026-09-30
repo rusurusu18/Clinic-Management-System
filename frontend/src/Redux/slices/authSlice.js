@@ -255,18 +255,10 @@ const authSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state) => {
         state.isLoading = false;
-        const { user, accessToken, refreshToken } = action.payload;
-        state.user = user;
-        state.accessToken = accessToken;
-        state.refreshToken = refreshToken;
-        state.isAuthenticated = true;
-        state.isEmailVerified = user?.isEmailVerified || false;
         state.success = true;
-        persistAuthData(user, accessToken, refreshToken);
-        state.pendingEmail = user?.email || null;
-        toast.success('Account created. Verify your email to continue.');
+        toast.success('Account created. Sign in with your email and password.');
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoading = false;
@@ -289,7 +281,7 @@ const authSlice = createSlice({
         state.success = true;
         persistAuthData(user, accessToken, refreshToken);
         state.pendingEmail = user?.email || null;
-        toast.success('Account created. Verify your email to continue.');
+        toast.success('Login successful');
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.isLoading = false;

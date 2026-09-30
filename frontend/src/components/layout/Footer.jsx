@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -10,7 +9,6 @@ import {
   ChevronRight,
   ArrowRight,
   Send,
-  Heart,
 } from 'lucide-react';
 import { Facebook, Twitter, Instagram, Linkedin, Youtube } from '../ui/BrandIcons';
 
@@ -58,7 +56,7 @@ const Footer = () => {
                 <Plus className="h-5 w-5" strokeWidth={3} />
               </span>
               <span className="font-display text-lg font-bold text-white">
-                Medi<span className="text-primary-400">Care</span>
+                Aster<span className="text-primary-400">Care</span>
               </span>
             </div>
             <p className="mt-4 text-sm leading-relaxed text-slate-400">
@@ -152,7 +150,7 @@ const Footer = () => {
 
       <div className="border-t border-slate-800">
         <div className="container-custom flex flex-col items-center justify-between gap-3 py-5 text-sm md:flex-row">
-          <p className="text-slate-500">© {currentYear} MediCare Clinic. All rights reserved.</p>
+          <p className="text-slate-500">© {currentYear} AsterCare Clinic. All rights reserved.</p>
           <div className="flex items-center gap-4 text-slate-500">
             <Link to="/privacy" className="hover:text-white">Privacy</Link>
             <span className="h-4 w-px bg-slate-700" />

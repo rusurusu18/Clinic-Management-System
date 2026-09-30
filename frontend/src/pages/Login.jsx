@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Mail, Lock, LogIn, ShieldCheck } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../hooks/authHooks.js';
@@ -27,7 +27,7 @@ const Login = () => {
   const { isLoading, isAuthenticated, user, error } = useAppSelector((s) => s.auth);
 
   const [formData, setFormData] = useState({
-    email: '',
+    email: location.state?.email || '',
     password: '',
   });
 

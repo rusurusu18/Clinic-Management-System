@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home as HomeIcon,
@@ -123,7 +123,7 @@ const Navbar = () => {
               <Plus className="h-5 w-5" strokeWidth={3} />
             </span>
             <span className="text-lg font-bold tracking-tight text-slate-900 dark:text-white font-display">
-              Medi<span className="text-primary-600">Care</span>
+              Aster<span className="text-primary-600">Care</span>
             </span>
           </Link>
 

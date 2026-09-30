@@ -10,17 +10,30 @@
    DESIGN TOKENS
    ============================================ */
 @theme {
-  /* Brand — Teal (medical, calm, trustworthy) */
-  --color-primary-50: #f0fdfa;
-  --color-primary-100: #ccfbf1;
-  --color-primary-200: #99f6e4;
-  --color-primary-300: #5eead4;
-  --color-primary-400: #2dd4bf;
-  --color-primary-500: #14b8a6;
-  --color-primary-600: #0d9488;
-  --color-primary-700: #0f766e;
-  --color-primary-800: #115e59;
-  --color-primary-900: #134e4a;
+  /* Brand — blue */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+
+  /* Keep legacy teal utility classes aligned with the blue brand palette. */
+  --color-teal-50: #eff6ff;
+  --color-teal-100: #dbeafe;
+  --color-teal-200: #bfdbfe;
+  --color-teal-300: #93c5fd;
+  --color-teal-400: #60a5fa;
+  --color-teal-500: #3b82f6;
+  --color-teal-600: #2563eb;
+  --color-teal-700: #1d4ed8;
+  --color-teal-800: #1e40af;
+  --color-teal-900: #1e3a8a;
+  --color-teal-950: #172554;
 
   /* Accent — warm amber for high-emphasis CTAs */
   --color-accent-50: #fffbeb;
@@ -56,8 +69,8 @@
   --color-warning-light: #fef3c7;
   --color-danger: #e11d48;
   --color-danger-light: #ffe4e6;
-  --color-info: #0d9488;
-  --color-info-light: #ccfbf1;
+  --color-info: #2563eb;
+  --color-info-light: #dbeafe;
 
   /* Typography */
   --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -112,7 +125,7 @@
   --shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.09), 0 4px 8px rgba(15, 23, 42, 0.04);
   --shadow-xl: 0 24px 48px rgba(15, 23, 42, 0.12), 0 8px 16px rgba(15, 23, 42, 0.05);
   --shadow-2xl: 0 32px 64px rgba(15, 23, 42, 0.16);
-  --shadow-primary: 0 14px 32px rgba(13, 148, 136, 0.28);
+  --shadow-primary: 0 14px 32px rgba(37, 99, 235, 0.24);
 
   /* Transitions */
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -134,9 +147,9 @@
    THEME SURFACES (light / dark aware) — unlayered
    ============================================ */
 :root {
-  --app-bg: #f4f8fb;
-  --app-bg-tint-1: rgba(13, 148, 136, 0.10);
-  --app-bg-tint-2: rgba(45, 212, 191, 0.10);
+  --app-bg: #f5f9ff;
+  --app-bg-tint-1: rgba(37, 99, 235, 0.08);
+  --app-bg-tint-2: rgba(96, 165, 250, 0.10);
   --card-bg: #ffffff;
   --card-border: rgba(148, 163, 184, 0.22);
   --panel-bg: rgba(255, 255, 255, 0.82);
@@ -148,8 +161,8 @@
 
 [data-theme="dark"] {
   --app-bg: #070d18;
-  --app-bg-tint-1: rgba(13, 148, 136, 0.18);
-  --app-bg-tint-2: rgba(56, 189, 248, 0.12);
+  --app-bg-tint-1: rgba(37, 99, 235, 0.18);
+  --app-bg-tint-2: rgba(96, 165, 250, 0.12);
   --card-bg: #0f1a2b;
   --card-border: rgba(148, 163, 184, 0.14);
   --panel-bg: rgba(15, 26, 43, 0.72);

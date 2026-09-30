@@ -22,7 +22,7 @@ export const EXPERIENCE_RANGES = ['0-5', '5-10', '10-15', '15+'];
 
 export const PAYMENT_METHODS = ['eSewa', 'Khalti', 'ConnectIPS', 'Bank Transfer'];
 
-export const APP_NAME = import.meta.env.VITE_APP_NAME || 'Clinic Management System';
+export const APP_NAME = import.meta.env.VITE_APP_NAME || 'AsterCare Clinic';
 export const APP_VERSION = import.meta.env.VITE_APP_VERSION || '1.0.0';
 const configuredApiUrl = import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL;
 const normalizedApiUrl = configuredApiUrl

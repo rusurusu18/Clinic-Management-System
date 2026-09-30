@@ -52,56 +52,15 @@ export const registerUser = async (userData) => {
         return user;
     });
 
-    // Send OTP for email verification
-    const otp = await sendOtp(email, 'EMAIL_VERIFICATION', newUser.id);
-    console.log(`[DEV/DEBUG] Generated Verification OTP for ${email}: ${otp}`);
-    
-    try {
-        await sendVerificationEmail(email, otp, fullName);
-    } catch (error) {
-        console.error(`⚠️ Non-fatal: Failed to send verification email to ${email}.`, error.message);
-    }
-
-    // Generate tokens
-    const payload = {
-        id: newUser.id,
-        email: newUser.email,
-        role: newUser.role
-    };
-    
-    const accessToken = generateAccessToken(payload);
-    const refreshToken = generateRefreshToken(payload);
-
-    try {
-        await prisma.refreshToken.create({
-            data: {
-                token: refreshToken,
-                userId: newUser.id,
-                expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
-            },
-        });
-    } catch (error) {
-        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2000') {
-            throw new Error('Refresh token storage failed due to token length. Please contact support.');
-        }
-        throw error;
-    }
-
-    // Return user without password
-    const { password: _, ...userWithoutPassword } = newUser;
-    
     return {
         user: {
-            id: userWithoutPassword.id,
-            fullName: userWithoutPassword.fullName,
-            email: userWithoutPassword.email,
-            phone: userWithoutPassword.phone,
-            role: userWithoutPassword.role,
-            isActive: userWithoutPassword.isActive,
-            isEmailVerified: userWithoutPassword.isEmailVerified,
+            id: newUser.id,
+            fullName: newUser.fullName,
+            email: newUser.email,
+            phone: newUser.phone,
+            role: newUser.role,
+            isActive: newUser.isActive,
         },
-        accessToken,
-        refreshToken
     };
 };
 
@@ -200,9 +159,6 @@ export const loginUser = async (email, password, userAgent, ipAddress) => {
         throw new Error(MESSAGES.INVALID_CREDENTIALS || 'Invalid email or password');
     }
 
-     if (!user.isEmailVerified) {
-        throw new Error('EMAIL_NOT_VERIFIED');
-    }
     return createAuthSession(user, userAgent, ipAddress, 'LOGIN');
 };
 

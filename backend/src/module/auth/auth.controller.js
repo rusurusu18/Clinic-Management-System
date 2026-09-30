@@ -42,10 +42,6 @@ export const register = async (req, res) => {
 
         const result = await authService.registerUser(userData);
 
-        // Set cookies
-        setAccessTokenCookie(res, result.accessToken);
-        setRefreshTokenCookie(res, result.refreshToken);
-
         return createdResponse(res, result, MESSAGES.USER_REGISTERED);
     } catch (error) {
         console.error('Register error:', error);

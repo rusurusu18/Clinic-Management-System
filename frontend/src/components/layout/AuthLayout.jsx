@@ -1,11 +1,10 @@
-import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { Plus, ArrowLeft } from 'lucide-react';
 
 const AuthLayout = () => {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-12">
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(135deg,_#022c22_0%,_#0f766e_55%,_#0d9488_100%)]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(135deg,_#102a56_0%,_#1d4ed8_55%,_#60a5fa_100%)]" />
       <div className="pointer-events-none absolute -right-16 -top-24 -z-10 h-80 w-80 rounded-full bg-teal-300/20 blur-3xl" />
       <div className="pointer-events-none absolute inset-0 -z-10 opacity-[0.06] [background-image:radial-gradient(#ffffff_1px,transparent_1px)] [background-size:22px_22px]" />
 
@@ -15,7 +14,7 @@ const AuthLayout = () => {
             <Plus className="h-6 w-6" strokeWidth={3} />
           </span>
           <span className="font-display text-2xl font-bold text-white">
-            Medi<span className="text-amber-300">Care</span>
+            Aster<span className="text-amber-300">Care</span>
           </span>
         </Link>
 

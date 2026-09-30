@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { HeartHandshake, Microscope, ShieldCheck, Globe2, ArrowRight, Building2 } from 'lucide-react';
 import Card from '../components/ui/Card';
@@ -31,7 +30,7 @@ const About = () => {
 
         <Card className="mt-10 p-8 lg:p-10">
           <p className="text-lg leading-relaxed text-slate-700 dark:text-slate-300">
-            Welcome to <span className="font-semibold text-primary-700 dark:text-primary-400">MediCare</span>, your trusted
+            Welcome to <span className="font-semibold text-primary-700 dark:text-primary-400">AsterCare</span>, your trusted
             healthcare partner in Nepal. We are dedicated to providing exceptional medical care with a focus on patient
             comfort and satisfaction.
           </p>
