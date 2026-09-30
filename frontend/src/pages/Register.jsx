@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Mail, Lock, UserCircle, Phone, UserPlus } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../hooks/authHooks.js';
 import { registerUser, clearError } from '../Redux/slices/authSlice.js';
@@ -10,6 +10,7 @@ import LoadingSpinner from '../components/ui/LoadingSpinner.jsx';
 const Register = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isLoading, error} = useAppSelector((s) => s.auth);
 
   const [formData, setFormData] = useState({
@@ -67,7 +68,10 @@ const Register = () => {
     if (registerUser.fulfilled.match(result)) {
       if (formData.role === 'DOCTOR') localStorage.setItem('doctor_onboarding_pending', 'true');
       dispatch({ type: 'auth/clearAuth' });
-      navigate('/login', { replace: true, state: { registered: true, email: formData.email } });
+      navigate('/login', {
+        replace: true,
+        state: { registered: true, email: formData.email, from: location.state?.from },
+      });
     }
   };
 

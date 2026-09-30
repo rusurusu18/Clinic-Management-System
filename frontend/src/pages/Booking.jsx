@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, CheckCircle2, User, Calendar, CreditCard, ChevronLeft } from 'lucide-react';
+import { ChevronRight, CheckCircle2, User, Calendar, CreditCard, ChevronLeft, LogIn, UserPlus } from 'lucide-react';
 import { useDoctorContext } from '../hooks/useDoctorContext.js';
+import { useAppSelector } from '../hooks/authHooks.js';
 import Button from '../components/ui/Button';
 
 const timeSlots = [
@@ -12,6 +13,7 @@ const timeSlots = [
 
 const Booking = () => {
   const { doctors, loading: doctorsLoading, error: doctorsError } = useDoctorContext();
+  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     doctorId: null,
@@ -33,6 +35,28 @@ const Booking = () => {
   };
 
   const selectedDoctor = doctors.find((doctor) => doctor.id === formData.doctorId);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[60vh] bg-slate-50 px-4 py-16 dark:bg-slate-950">
+        <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-lg dark:border-slate-800 dark:bg-slate-900">
+          <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-xl bg-primary-50 text-primary-600 dark:bg-primary-900/30 dark:text-primary-300">
+            <Calendar className="h-7 w-7" />
+          </div>
+          <h1 className="font-display text-2xl font-bold text-slate-900 dark:text-white">Sign in to book an appointment</h1>
+          <p className="mt-3 text-sm text-slate-600 dark:text-slate-400">Appointments can be booked with a patient account.</p>
+          <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link to="/login" state={{ from: { pathname: '/book' } }}>
+              <Button variant="primary" icon={<LogIn className="h-4 w-4" />}>Login</Button>
+            </Link>
+            <Link to="/register" state={{ from: { pathname: '/book' } }}>
+              <Button variant="outline" icon={<UserPlus className="h-4 w-4" />}>Register</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 py-12 dark:bg-slate-950">

@@ -33,7 +33,7 @@ export const ENV = {
   EMAIL_PORT: parseInt(process.env.EMAIL_PORT) || 587,
   EMAIL_USER: process.env.EMAIL_USER,
   EMAIL_PASSWORD: process.env.EMAIL_PASSWORD,
-  EMAIL_FROM: process.env.EMAIL_FROM || "noreply@yourapp.com",
+  EMAIL_FROM: process.env.EMAIL_FROM || "AsterCare <noreply@astercare.com.np>",
 
   // OTP
   OTP_EXPIRY_MINUTES:

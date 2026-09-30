@@ -8,7 +8,7 @@ import Input from '../components/ui/Input';
 const contactInfo = [
   { Icon: MapPin, title: 'Address', details: 'Chabahil, Kathmandu, Nepal' },
   { Icon: Phone, title: 'Phone', details: '+977-1-444-5678' },
-  { Icon: Mail, title: 'Email', details: 'hello@medicare.com.np' },
+  { Icon: Mail, title: 'Email', details: 'hello@astercare.com.np' },
   { Icon: Clock, title: 'Working Hours', details: 'Sun–Fri: 8:00 AM – 8:00 PM' },
 ];
 

@@ -124,6 +124,7 @@ const createAuthSession = async (user, userAgent, ipAddress, action = 'LOGIN') =
     data: {
         userId: user.id,
         action,
+        resource: 'User',
         details:{email: user.email},
         ipAddress,
         userAgent,

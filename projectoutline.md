@@ -1,5 +1,5 @@
 # Product Requirements Document (PRD)
-## Clinic Management System (MVP)
+## AsterCare Clinic (MVP)
 
 | | |
 |---|---|
@@ -18,7 +18,7 @@
 Small to mid-sized clinics in Nepal largely run on paper registers, phone-based appointment booking, and manual cash handling. This causes long patient wait times, lost records, double-booked doctors, no visibility into daily revenue, and no way for patients to pay or check queue status remotely.
 
 ### 1.2 Product Vision
-A web-based Clinic Management System that digitizes patient records, appointment scheduling, and billing, with **live queue/appointment status via WebSocket** so patients and staff always see up-to-date information, and **integrated Nepali digital payments** (eSewa/Khalti) so patients can pay online without cash handling at the counter.
+The AsterCare platform digitizes patient records, appointment scheduling, and billing, with **live queue/appointment status via WebSocket** so patients and staff always see up-to-date information, and **integrated Nepali digital payments** (eSewa/Khalti) so patients can pay online without cash handling at the counter.
 
 ### 1.3 Goals
 - Reduce patient waiting-room uncertainty by showing live queue position and estimated wait time.

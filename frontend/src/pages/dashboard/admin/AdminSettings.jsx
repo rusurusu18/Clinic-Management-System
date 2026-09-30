@@ -37,7 +37,7 @@ const Settings = () => {
           </div>
           <Field label="Clinic name" defaultValue="AsterCare Clinic" />
           <Field label="Phone" defaultValue="+977-1-444-5678" />
-          <Field label="Email" defaultValue="hello@medicare.com.np" />
+          <Field label="Email" defaultValue="hello@astercare.com.np" />
           <Field label="Address" defaultValue="Chabahil, Kathmandu, Nepal" />
           <button className="btn btn-primary btn-sm"><Save className="h-4 w-4" /> Save changes</button>
         </div>

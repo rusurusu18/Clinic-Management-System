@@ -2,7 +2,7 @@ import 'dotenv/config';
 import prisma from '../src/config/database.js';
 import { hashPassword } from '../src/utils/hash.js';
 
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@medicare.local').toLowerCase().trim();
+const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@astercare.local').toLowerCase().trim();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@12345';
 const ADMIN_PHONE = process.env.ADMIN_PHONE || '+9779800000000';
 const ADMIN_NAME = process.env.ADMIN_NAME || 'System Administrator';
@@ -11,38 +11,38 @@ const DEPARTMENTS = [
   {
     name: 'Cardiology',
     description: 'Diagnosis and treatment of heart and cardiovascular conditions.',
-    hospital: 'MediCare Hospital',
+    hospital: 'AsterCare Hospital',
     location: 'First floor',
   },
   {
     name: 'Neurology',
     description: 'Care for the brain, spine, nerves, and related conditions.',
-    hospital: 'MediCare Hospital',
+    hospital: 'AsterCare Hospital',
     location: 'First floor',
   },
   {
     name: 'Dermatology',
     description: 'Medical and surgical care for skin, hair, and nail conditions.',
-    hospital: 'MediCare Hospital',
+    hospital: 'AsterCare Hospital',
     location: 'Second floor',
   },
   {
     name: 'General Medicine',
     description: 'Primary care, preventive medicine, and general adult health services.',
-    hospital: 'MediCare Hospital',
+    hospital: 'AsterCare Hospital',
     location: 'Ground floor',
   },
   {
     name: 'Pediatrics',
     description: 'Healthcare for infants, children, and adolescents.',
-    hospital: 'MediCare Hospital',
+    hospital: 'AsterCare Hospital',
     location: 'Ground floor',
   },
 ];
 
 const DOCTORS = [
   {
-    email: 'sarah.sharma@medicare.local',
+    email: 'sarah.sharma@astercare.local',
     fullName: 'Dr. Sarah Sharma',
     phone: '+9779800000011',
     specialization: 'Cardiology',
@@ -53,7 +53,7 @@ const DOCTORS = [
     bio: 'Cardiologist focused on preventive heart care and cardiovascular wellness.',
   },
   {
-    email: 'arjun.thapa@medicare.local',
+    email: 'arjun.thapa@astercare.local',
     fullName: 'Dr. Arjun Thapa',
     phone: '+9779800000012',
     specialization: 'Neurology',
@@ -64,7 +64,7 @@ const DOCTORS = [
     bio: 'Neurologist providing evidence-based care for brain, spine, and nerve conditions.',
   },
   {
-    email: 'maya.gurung@medicare.local',
+    email: 'maya.gurung@astercare.local',
     fullName: 'Dr. Maya Gurung',
     phone: '+9779800000013',
     specialization: 'Dermatology',
@@ -75,7 +75,7 @@ const DOCTORS = [
     bio: 'Dermatologist specializing in medical, surgical, and cosmetic skin care.',
   },
   {
-    email: 'binod.adhikari@medicare.local',
+    email: 'binod.adhikari@astercare.local',
     fullName: 'Dr. Binod Adhikari',
     phone: '+9779800000014',
     specialization: 'General Medicine',
@@ -86,7 +86,7 @@ const DOCTORS = [
     bio: 'General physician delivering comprehensive primary and preventive care.',
   },
   {
-    email: 'nisha.karki@medicare.local',
+    email: 'nisha.karki@astercare.local',
     fullName: 'Dr. Nisha Karki',
     phone: '+9779800000015',
     specialization: 'Pediatrics',

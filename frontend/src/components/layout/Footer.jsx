@@ -41,7 +41,7 @@ const Footer = () => {
   const contactInfo = [
     { Icon: MapPin, text: 'Chabahil, Kathmandu, Nepal' },
     { Icon: Phone, text: '+977-1-444-5678' },
-    { Icon: Mail, text: 'hello@medicare.com.np' },
+    { Icon: Mail, text: 'hello@astercare.com.np' },
     { Icon: Clock, text: 'Sun–Fri: 8:00 AM – 8:00 PM' },
   ];
 

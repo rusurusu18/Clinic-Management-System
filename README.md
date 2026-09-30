@@ -1,6 +1,6 @@
-# 🏥 Clinic Management System
+# 🏥 AsterCare Clinic
 
-> A modern full-stack **Clinic Management System** built for clinics in Nepal, providing digital management of patients, doctors, appointments, medical records, billing, payments, and role-based clinic operations.
+> A modern full-stack clinic platform built for clinics in Nepal, providing digital management of patients, doctors, appointments, medical records, billing, payments, and role-based clinic operations.
 
 ---
 
@@ -60,7 +60,7 @@ It combines a public-facing clinic website with authenticated dashboards and bac
 
 ## 🔐 Authentication & Authorization
 
-MediCare provides secure authentication and role-based authorization.
+AsterCare provides secure authentication and role-based authorization.
 
 ### Authentication Features
 

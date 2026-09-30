@@ -126,7 +126,7 @@ const StaffBilling = () => {
         {/* Invoice Header */}
         <div className="flex justify-between items-start mb-8 pb-6 border-b">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Healthcare System</h2>
+            <h2 className="text-2xl font-bold text-gray-900">AsterCare</h2>
             <p className="text-gray-600 text-sm mt-1">123 Medical Street</p>
             <p className="text-gray-600 text-sm">Kathmandu, Nepal</p>
             <p className="text-gray-600 text-sm">+977 9800000000</p>

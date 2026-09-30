@@ -70,7 +70,7 @@ export const getVerificationEmailTemplate = (name, otp) => {
                     <p>If you didn't request this, please ignore this email.</p>
                     <div class="footer">
                         <p>This is an automated message, please do not reply.</p>
-                        <p>&copy; ${new Date().getFullYear()} Healthcare System. All rights reserved.</p>
+                        <p>&copy; ${new Date().getFullYear()} AsterCare. All rights reserved.</p>
                     </div>
                 </div>
             </div>
@@ -112,10 +112,10 @@ export const getPasswordResetEmailTemplate = (name, otp) => {
                     <div class="warning">
                         <p><strong>⚠️ Security Notice:</strong> If you didn't request this, please ignore this email and secure your account.</p>
                     </div>
-                    <p>Best regards,<br><strong>Healthcare System Team</strong></p>
+                    <p>Best regards,<br><strong>AsterCare Team</strong></p>
                     <div class="footer">
                         <p>This is an automated message, please do not reply.</p>
-                        <p>&copy; ${new Date().getFullYear()} Healthcare System. All rights reserved.</p>
+                        <p>&copy; ${new Date().getFullYear()} AsterCare. All rights reserved.</p>
                     </div>
                 </div>
             </div>
@@ -142,7 +142,7 @@ export const sendPasswordResetEmail = async (email, otp, name) => {
 
 // Send Welcome Email
 export const sendWelcomeEmail = async (email, name) => {
-    const subject = 'Welcome to Healthcare System!';
+    const subject = 'Welcome to AsterCare!';
     const html = `
         <!DOCTYPE html>
         <html>
@@ -160,7 +160,7 @@ export const sendWelcomeEmail = async (email, name) => {
         <body>
             <div class="container">
                 <div class="header">
-                    <h1>🏥 Welcome to Healthcare System!</h1>
+                    <h1>🏥 Welcome to AsterCare!</h1>
                 </div>
                 <div class="content">
                     <h2>Hello ${name}!</h2>
@@ -180,10 +180,10 @@ export const sendWelcomeEmail = async (email, name) => {
                         </div>
                     </div>
                     <p>If you have any questions, feel free to contact our support team.</p>
-                    <p>Best regards,<br><strong>Healthcare System Team</strong></p>
+                    <p>Best regards,<br><strong>AsterCare Team</strong></p>
                 </div>
                 <div class="footer">
-                    <p>&copy; ${new Date().getFullYear()} Healthcare System. All rights reserved.</p>
+                    <p>&copy; ${new Date().getFullYear()} AsterCare. All rights reserved.</p>
                 </div>
             </div>
         </body>
@@ -215,10 +215,10 @@ export const sendWelcomeEmail = async (email, name) => {
 //                 <div class="content">
 //                     <p>Hello <strong>${name}</strong>,</p>
 //                     <p>${message}</p>
-//                     <p>Best regards,<br><strong>Healthcare System Team</strong></p>
+//                     <p>Best regards,<br><strong>AsterCare Team</strong></p>
 //                 </div>
 //                 <div class="footer">
-//                     <p>&copy; ${new Date().getFullYear()} Healthcare System. All rights reserved.</p>
+//                     <p>&copy; ${new Date().getFullYear()} AsterCare. All rights reserved.</p>
 //                 </div>
 //             </div>
 //         </body>

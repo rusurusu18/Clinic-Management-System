@@ -18,7 +18,7 @@ const router = express.Router();
 // ==================== PUBLIC HEALTH CHECK ====================
 router.get("/health",(req,res)=>{
     return res.json({
-        message:"Cilnic Management System",
+        message:"AsterCare",
         success:true,
         timestamp: new Date().toISOString(),
     })
