@@ -20,6 +20,8 @@ import {
 import SectionCard from '../../../components/sections/SectionCard';
 import StatCard from '../../../components/sections/StatCard';
 import { createMedicalRecord, deleteMedicalRecord, getAllMedicalRecords } from '../../../services/medicalRecordService.js';
+import { getAllPatients } from '../../../services/patientServices.js';
+import { getMyDoctorProfile } from '../../../services/doctorService.js';
 import toast from 'react-hot-toast';
 
 const recordTypes = [
@@ -78,9 +80,14 @@ const DoctorRecords = () => {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [patients, setPatients] = useState([]);
+  const [patientsLoading, setPatientsLoading] = useState(false);
+  const [doctorProfile, setDoctorProfile] = useState(null);
+  const [doctorLoading, setDoctorLoading] = useState(false);
+  const [savingRecord, setSavingRecord] = useState(false);
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 0 });
   const [filter, setFilter] = useState({ search: '', patientId: '', fromDate: '', toDate: '' });
-  const [recordForm, setRecordForm] = useState({ patientId: '', doctorId: '', symptoms: '', diagnosis: '', notes: '' });
+  const [recordForm, setRecordForm] = useState({ patientId: '', symptoms: '', diagnosis: '', notes: '' });
 
   const filtered = records.filter((record) => {
     if (typeFilter !== 'All' && typeFilter === 'Rx' && record.prescriptions === 0) return false;
@@ -173,21 +180,55 @@ const handlePageChange = (newPage )=>{
   setPagination((p)=>({...p,page:newPage}))
 }
 
+  const handleOpenCreate = async () => {
+    setCreateOpen(true);
+    setPatientsLoading(true);
+    setDoctorLoading(true);
+
+    const [patientsResult, doctorResult] = await Promise.allSettled([
+      getAllPatients({ page: 1, limit: 100 }),
+      getMyDoctorProfile(),
+    ]);
+
+    if (patientsResult.status === 'fulfilled') {
+      setPatients(patientsResult.value?.patients || []);
+    } else {
+      toast.error(patientsResult.reason?.response?.data?.message || patientsResult.reason?.message || 'Could not load patients');
+    }
+    if (doctorResult.status === 'fulfilled') {
+      setDoctorProfile(doctorResult.value);
+    } else {
+      setDoctorProfile(null);
+      toast.error(doctorResult.reason?.response?.data?.message || doctorResult.reason?.message || 'Could not load your doctor profile');
+    }
+
+    setPatientsLoading(false);
+    setDoctorLoading(false);
+  };
+
   const handleCreateRecord = async () => {
+    if (!recordForm.patientId || !doctorProfile?.id || !recordForm.diagnosis.trim()) {
+      toast.error('Select a patient and enter a diagnosis before saving');
+      return;
+    }
+
+    setSavingRecord(true);
     try {
       await createMedicalRecord({
         patientId: recordForm.patientId,
-        doctorId: recordForm.doctorId,
+        doctorId: doctorProfile.id,
         symptoms: recordForm.symptoms.split(',').map((item) => item.trim()).filter(Boolean),
-        diagnosis: recordForm.diagnosis,
-        notes: recordForm.notes,
+        diagnosis: recordForm.diagnosis.trim(),
+        notes: recordForm.notes.trim(),
       });
       setCreateOpen(false);
-      setRecordForm({ patientId: '', doctorId: '', symptoms: '', diagnosis: '', notes: '' });
+      setRecordForm({ patientId: '', symptoms: '', diagnosis: '', notes: '' });
       await fetchRecords({ page: 1 });
       toast.success('Medical record created');
     } catch (requestError) {
       toast.error(requestError.response?.data?.message || 'Could not create medical record');
+    } finally {
+      setSavingRecord(false);
     }
   };
   return (
@@ -227,21 +268,23 @@ const handlePageChange = (newPage )=>{
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setCreateOpen(true)} className="flex items-center gap-1.5 rounded-xl bg-primary-600 px-3 py-2 text-xs font-semibold text-white hover:bg-primary-700 shadow-sm">
+          <button onClick={handleOpenCreate} className="flex items-center gap-1.5 rounded-xl bg-primary-600 px-3 py-2 text-xs font-semibold text-white hover:bg-primary-700 shadow-sm">
             <Plus className="h-4 w-4" /> New record
           </button>
         </div>
-        //errors 
-        {error && (
-          <div className='bg-red-100 ' > {error} </div>
-
-        )  }
       </div>
+      {error && (
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
+          {error}
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Records list */}
         <SectionCard className="lg:col-span-2" title={`Medical records (${filtered.length})`} subtitle={loading ? 'Loading records...' : 'Click to view full record'} bodyClassName="p-0">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="p-10 text-center text-sm text-slate-400">Loading medical records...</div>
+          ) : filtered.length === 0 ? (
             <div className="p-10 text-center text-sm text-slate-400">
               <FileText className="mx-auto h-10 w-10 mb-2 text-slate-300 dark:text-slate-700" />
               No records match your filters.
@@ -421,11 +464,20 @@ const handlePageChange = (newPage )=>{
             <div className="mt-4 space-y-3 text-sm">
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">Patient</label>
-                <input value={recordForm.patientId} onChange={(e) => setRecordForm({ ...recordForm, patientId: e.target.value })} placeholder="Patient ID" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-primary-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white" />
+                <select value={recordForm.patientId} onChange={(e) => setRecordForm({ ...recordForm, patientId: e.target.value })} disabled={patientsLoading || patients.length === 0} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-800 dark:bg-slate-950 dark:text-white">
+                  <option value="">{patientsLoading ? 'Loading patients...' : patients.length ? 'Select a patient' : 'No patients available'}</option>
+                  {patients.map((patient) => (
+                    <option key={patient.id} value={patient.id}>
+                      {patient.user?.fullName || 'Unnamed patient'}{patient.user?.phone ? ` · ${patient.user.phone}` : ''}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">Doctor ID</label>
-                <input value={recordForm.doctorId} onChange={(e) => setRecordForm({ ...recordForm, doctorId: e.target.value })} placeholder="Doctor ID" className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none focus:border-primary-500 dark:border-slate-800 dark:bg-slate-950 dark:text-white" />
+                <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">Doctor</label>
+                <div className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-slate-600 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300">
+                  {doctorLoading ? 'Loading your profile...' : doctorProfile?.user?.fullName || 'Doctor profile unavailable'}
+                </div>
               </div>
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-600 dark:text-slate-400">Visit type</label>
@@ -448,8 +500,8 @@ const handlePageChange = (newPage )=>{
             </div>
             <div className="mt-5 flex items-center justify-end gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
               <button onClick={() => setCreateOpen(false)} className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 dark:border-slate-800 dark:text-slate-300">Cancel</button>
-              <button onClick={handleCreateRecord} disabled={!recordForm.patientId || !recordForm.doctorId || !recordForm.diagnosis} className="flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-xs font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50">
-                <CheckCircle2 className="h-4 w-4" /> Save record
+              <button onClick={handleCreateRecord} disabled={savingRecord || patientsLoading || doctorLoading || !recordForm.patientId || !doctorProfile?.id || !recordForm.diagnosis.trim()} className="flex items-center gap-1.5 rounded-xl bg-primary-600 px-4 py-2 text-xs font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50">
+                <CheckCircle2 className="h-4 w-4" /> {savingRecord ? 'Saving...' : 'Save record'}
               </button>
             </div>
           </div>

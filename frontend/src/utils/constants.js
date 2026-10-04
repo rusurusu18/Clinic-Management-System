@@ -30,7 +30,7 @@ const normalizedApiUrl = configuredApiUrl
   : null;
 
 export const API_URL = normalizedApiUrl || (
-  import.meta.env.DEV ? 'http://localhost:5000/api' : '/api'
+  import.meta.env.DEV ? 'http://localhost:5001/api' : '/api'
 );
 
 export const SERVICES = [

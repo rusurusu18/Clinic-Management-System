@@ -1,6 +1,6 @@
 import axios from "../utils/axios.js"
 
-const API_URL = '/auth' //localhost:5000/api/auth
+const API_URL = '/auth'
 
 //auth endpoints
 //Register User
