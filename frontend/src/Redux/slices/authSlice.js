@@ -19,6 +19,8 @@ const clearAllAuthStorage = () => {
   localStorage.removeItem('auth_user');
 };
 
+const storedAccessToken = localStorage.getItem('accessToken') || localStorage.getItem('auth_token');
+
 const persistAuthData = (user, accessToken, refreshToken) => {
   if (accessToken) {
     localStorage.setItem('accessToken', accessToken);
@@ -34,14 +36,14 @@ const persistAuthData = (user, accessToken, refreshToken) => {
 };
 
 const initialState = {
-  user: getStoredUser(),
-  accessToken: localStorage.getItem('accessToken') || localStorage.getItem('auth_token') || null,
+  user: null,
+  accessToken: storedAccessToken,
   refreshToken: localStorage.getItem('refreshToken') || null,
-  isAuthenticated: Boolean(
-    localStorage.getItem('accessToken') || localStorage.getItem('auth_token')
-  ),
+  isAuthenticated: false,
   isLoading: false,
-  isEmailVerified: getStoredUser()?.isEmailVerified || false,
+  isAuthChecking: Boolean(storedAccessToken),
+  isAuthCheckStarted: false,
+  isEmailVerified: false,
   error: null,
   otpSent: false,
   pendingEmail: getStoredUser()?.email || null,
@@ -176,6 +178,9 @@ export const fetchProfile = createAsyncThunk(
       const message = error.response?.data?.message || error.message || 'Failed to fetch profile';
       return rejectWithValue(message);
     }
+  },
+  {
+    condition: (_, { getState }) => !getState().auth.isAuthCheckStarted,
   }
 );
 
@@ -421,12 +426,17 @@ const authSlice = createSlice({
       })
 
       .addCase(fetchProfile.pending, (state) => {
+        state.isAuthCheckStarted = true;
+        state.isAuthChecking = true;
         state.isLoading = true;
         state.error = null;
       })
       .addCase(fetchProfile.fulfilled, (state, action) => {
+        state.isAuthCheckStarted = false;
+        state.isAuthChecking = false;
         state.isLoading = false;
         state.user = action.payload;
+        state.isAuthenticated = true;
         state.isEmailVerified = action.payload?.isEmailVerified || state.isEmailVerified;
         if (action.payload?.role) {
           localStorage.setItem('auth_role', action.payload.role);
@@ -434,7 +444,14 @@ const authSlice = createSlice({
         localStorage.setItem('auth_user', JSON.stringify(action.payload));
       })
       .addCase(fetchProfile.rejected, (state, action) => {
+        state.isAuthCheckStarted = false;
+        state.isAuthChecking = false;
         state.isLoading = false;
+        state.user = null;
+        state.isAuthenticated = false;
+        state.isEmailVerified = false;
+        localStorage.removeItem('auth_role');
+        localStorage.removeItem('auth_user');
         state.error = action.payload;
       })
 

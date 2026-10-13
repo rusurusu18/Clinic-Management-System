@@ -80,10 +80,10 @@ const RouteWrapper = ({ children }) => (
 );
 
 const ProtectedRoute = ({ children, requiredRole }) => {
-  const { isAuthenticated, user, isLoading } = useAppSelector((s) => s.auth);
+  const { isAuthenticated, user, isLoading, isAuthChecking } = useAppSelector((s) => s.auth);
   const location = useLocation();
 
-  if (isLoading) {
+  if (isLoading || isAuthChecking) {
     return (
       <div className="flex-center min-h-[100vh]">
         <LoadingSpinner size="lg" text="Verifying authentication..." />
@@ -113,9 +113,9 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   return children;
 };
 const GuestRoute = ({ children }) => {
-  const { isAuthenticated, user, isLoading } = useAppSelector((s) => s.auth);
+  const { isAuthenticated, user, isLoading, isAuthChecking } = useAppSelector((s) => s.auth);
 
-  if (isLoading) {
+  if (isLoading || isAuthChecking) {
     return (
       <div className="flex-center min-h-[100vh]">
         <LoadingSpinner size="lg" text="Loading..." />
