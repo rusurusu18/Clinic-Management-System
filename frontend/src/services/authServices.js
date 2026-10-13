@@ -13,12 +13,16 @@ export const register = async (userData) => {
 };
 
 export const login = async (credentials) => {
-  const response = await axios.post(`${API_URL}/login`, credentials);
+  const response = await axios.post(`${API_URL}/login`, credentials, {
+    skipAuth: true,
+  });
   return response.data.data;
 };
 
 export const adminLogin = async (credentials) => {
-  const response = await axios.post(`${API_URL}/admin/login`, credentials);
+  const response = await axios.post(`${API_URL}/admin/login`, credentials, {
+    skipAuth: true,
+  });
   return response.data.data;
 };
 
@@ -30,22 +34,30 @@ export const logout = async () => {
 export const refreshToken = async (refreshTokenValue) => {
   const response = await axios.post(`${API_URL}/refresh-token`, {
     refreshToken: refreshTokenValue,
+  }, {
+    skipAuth: true,
   });
   return response.data.data;
 };
 
 export const verifyEmail = async (email, otp) => {
-  const response = await axios.post(`${API_URL}/verify-email`, { email, otp });
+  const response = await axios.post(`${API_URL}/verify-email`, { email, otp }, {
+    skipAuth: true,
+  });
   return response.data.data;
 };
 
 export const resendVerification = async (email) => {
-  const response = await axios.post(`${API_URL}/resend-verification`, { email });
+  const response = await axios.post(`${API_URL}/resend-verification`, { email }, {
+    skipAuth: true,
+  });
   return response.data.data;
 };
 
 export const forgotPassword = async (email) => {
-  const response = await axios.post(`${API_URL}/forgot-password`, { email });
+  const response = await axios.post(`${API_URL}/forgot-password`, { email }, {
+    skipAuth: true,
+  });
   return response.data.data;
 };
 
@@ -55,6 +67,8 @@ export const resetPassword = async (email, otp, newPassword, confirmPassword) =>
     otp,
     newPassword,
     confirmPassword: confirmPassword || newPassword,
+  }, {
+    skipAuth: true,
   });
   return response.data.data;
 };
