@@ -34,6 +34,15 @@ router.get(
 // Get current user's own patient profile
 router.get('/me', patientController.getPatientByUserId);
 
+// Upload documents to the authenticated patient's own profile
+router.post(
+  '/me/documents',
+  authorize(ROLES.PATIENT),
+  uploadMultiple,
+  handleMulterError,
+  patientController.uploadPatientDocuments
+);
+
 // Get patient by ID
 router.get(
   '/:id',

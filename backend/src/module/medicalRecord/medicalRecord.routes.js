@@ -11,6 +11,12 @@ router.use(verifyToken);
 
 // ==================== MEDICAL RECORDS ====================
 
+router.get(
+  '/my-history',
+  authorize('PATIENT'),
+  medicalRecordController.getMyMedicalHistory
+);
+
 // Patient history
 router.get(
   '/patient/:patientId/history',

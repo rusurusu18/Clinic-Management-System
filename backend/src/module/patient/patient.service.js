@@ -145,6 +145,12 @@ export const getPatientByUserId = async (userId) => {
   return patient;
 };
 
+export const addPatientDocumentsForUser = async (userId, files = []) => {
+  const patient = await prisma.patient.findUnique({ where: { userId } });
+  if (!patient) throw new Error('Patient not found for this user');
+  return updatePatient(patient.id, {}, files);
+};
+
 // ==================== UPDATE PATIENT ====================
 export const updatePatient = async (patientId, updateData, files = []) => {
   const existingPatient = await prisma.patient.findUnique({ where: { id: patientId } });

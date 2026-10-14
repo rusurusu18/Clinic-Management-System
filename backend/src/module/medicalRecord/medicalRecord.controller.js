@@ -1,4 +1,5 @@
 import * as medicalRecordService from './medicalRecord.service.js';
+import * as patientService from '../patient/patient.service.js';
 import { successResponse, errorResponse, createdResponse, notFoundResponse } from '../../utils/response.js';
 
 // ==================== MEDICAL RECORD CONTROLLERS ====================
@@ -182,6 +183,20 @@ export const getPatientMedicalHistory = async (req, res) => {
     return successResponse(res, history, 'Patient medical history fetched successfully');
   } catch (error) {
     console.error('Get patient history error:', error);
+    return errorResponse(res, error.message || 'Failed to fetch patient history');
+  }
+};
+
+export const getMyMedicalHistory = async (req, res) => {
+  try {
+    const patient = await patientService.getPatientByUserId(req.user.id);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const history = await medicalRecordService.getPatientMedicalHistory(patient.id, page, limit);
+    return successResponse(res, history, 'Patient medical history fetched successfully');
+  } catch (error) {
+    console.error('Get current patient history error:', error);
+    if (error.message === 'Patient not found for this user') return notFoundResponse(res, error.message);
     return errorResponse(res, error.message || 'Failed to fetch patient history');
   }
 };

@@ -58,6 +58,18 @@ export const getPatientByUserId = async (req, res) => {
   }
 };
 
+export const uploadPatientDocuments = async (req, res) => {
+  try {
+    if (!req.files?.length) return errorResponse(res, 'Select at least one file to upload', 400);
+    const patient = await patientService.addPatientDocumentsForUser(req.user.id, req.files || []);
+    return successResponse(res, patient, 'Patient documents uploaded successfully');
+  } catch (error) {
+    console.error('Upload patient documents error:', error);
+    if (error.message === 'Patient not found for this user') return notFoundResponse(res, error.message);
+    return errorResponse(res, error.message || 'Failed to upload patient documents');
+  }
+};
+
 // ==================== UPDATE PATIENT ====================
 export const updatePatient = async (req, res) => {
   try {

@@ -34,6 +34,15 @@ export const getPatientProfile = async () => {
   return response.data.data;
 };
 
+export const uploadMyPatientDocuments = async (files) => {
+  const formData = new FormData();
+  files.forEach((file) => formData.append('files', file));
+  const response = await axios.post(`${API_URL}/me/documents`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data.data;
+};
+
 export const createPatient = async (patientData, files = []) => {
   const payload = toPayload(patientData, files);
   const response = await axios.post(API_URL, payload, {

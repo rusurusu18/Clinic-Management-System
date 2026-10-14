@@ -39,6 +39,11 @@ export const getPatientMedicalHistory = async (patientId, params = {}) => {
     return response.data.data;
 };
 
+export const getMyMedicalHistory = async (params = {}) => {
+    const response = await axios.get(`${API_URL}/my-history`, { params });
+    return response.data.data;
+};
+
 export const createPrescription = async (data) => (await axios.post(`${API_URL}/prescription`, data)).data.data;
 export const updatePrescription = async (id, data) => (await axios.put(`${API_URL}/prescription/${id}`, data)).data.data;
 export const deletePrescription = async (id) => (await axios.delete(`${API_URL}/prescription/${id}`)).data.data;
