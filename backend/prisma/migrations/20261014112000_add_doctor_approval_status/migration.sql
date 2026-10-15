@@ -1,0 +1,4 @@
+ALTER TABLE `doctors`
+ADD COLUMN `approvalStatus` ENUM('PENDING', 'APPROVED', 'REJECTED') NOT NULL DEFAULT 'PENDING';
+
+UPDATE `doctors` SET `approvalStatus` = 'APPROVED';

@@ -7,7 +7,9 @@
     "build": "prisma generate",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js",
+    "migrate": "prisma migrate deploy",
+    "seed": "node prisma/seed.js"
   },
   "keywords": [],
   "author": "",

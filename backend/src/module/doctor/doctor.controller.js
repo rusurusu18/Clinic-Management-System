@@ -13,7 +13,7 @@ import {MESSAGES} from "../../constants/message.js"
 export const createDoctor = async (req, res) => {
   try {
     // req.files is an object with field names: { profilePicture: [...], certificates: [...] }
-    const doctor = await doctorService.createDoctor(req.body, req.files || {});
+    const doctor = await doctorService.createDoctor(req.body, req.files || {}, 'APPROVED');
     return createdResponse(res, doctor, 'Doctor created successfully');
   } catch (error) {
     console.error('Create doctor error:', error);
@@ -41,6 +41,34 @@ export const submitDoctorOnboarding = async (req, res) => {
   }
 };  
 
+export const getDoctorApplications = async (req, res) => {
+  try {
+    const { status } = req.query;
+    if (status && !['PENDING', 'APPROVED', 'REJECTED'].includes(status)) {
+      return errorResponse(res, 'Invalid doctor application status', 400);
+    }
+    const applications = await doctorService.getDoctorApplications(status);
+    return successResponse(res, applications, 'Doctor applications retrieved');
+  } catch (error) {
+    console.error('Get doctor applications error:', error);
+    return errorResponse(res, error.message || 'Failed to retrieve doctor applications');
+  }
+};
+
+export const reviewDoctorApplication = async (req, res) => {
+  try {
+    const doctor = await doctorService.reviewDoctorApplication(
+      req.params.id,
+      req.body.status,
+      req.user.id
+    );
+    return successResponse(res, doctor, `Doctor application ${req.body.status.toLowerCase()}`);
+  } catch (error) {
+    console.error('Review doctor application error:', error);
+    if (error.message === 'Doctor not found') return notFoundResponse(res, error.message);
+    return errorResponse(res, error.message || 'Failed to review doctor application');
+  }
+};
 
 // ==================== GET ALL DOCTORS ====================
 export const getAllDoctors = async (req, res) => {

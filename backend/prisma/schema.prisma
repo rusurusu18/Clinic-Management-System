@@ -74,6 +74,7 @@ model Doctor {
   user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   departmentId      String?
   department        Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  approvalStatus    DoctorApprovalStatus @default(PENDING)
   specialization    String?
   licenseNumber     String?  @unique
   qualifications    Json?    // Array of qualification strings
@@ -363,6 +364,12 @@ enum Role {
   DOCTOR
   PATIENT
   RECEPTIONIST
+}
+
+enum DoctorApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum Gender {

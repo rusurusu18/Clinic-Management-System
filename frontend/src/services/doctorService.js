@@ -37,6 +37,18 @@ export const getAllDoctors = async (params = {}) => {
     return response.data.data;
 };
 
+export const getDoctorApplications = async (status) => {
+    const response = await axios.get(`${API_URL}/admin/applications`, {
+        params: status ? { status } : {},
+    });
+    return response.data.data;
+};
+
+export const reviewDoctorApplication = async (doctorId, status) => {
+    const response = await axios.patch(`${API_URL}/admin/applications/${doctorId}/review`, { status });
+    return response.data.data;
+};
+
 export const getAllPublicDoctors = async (params = {}) => {
     const response = await axios.get(`${API_URL}/public`, {
         params,

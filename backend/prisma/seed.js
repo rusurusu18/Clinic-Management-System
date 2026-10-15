@@ -170,6 +170,7 @@ async function seedDoctors() {
       where: { userId: user.id },
       update: {
         departmentId: department?.id,
+        approvalStatus: 'APPROVED',
         specialization: doctorData.specialization,
         licenseNumber: doctorData.licenseNumber,
         experience: doctorData.experience,
@@ -185,6 +186,7 @@ async function seedDoctors() {
       create: {
         userId: user.id,
         departmentId: department?.id,
+        approvalStatus: 'APPROVED',
         specialization: doctorData.specialization,
         licenseNumber: doctorData.licenseNumber,
         experience: doctorData.experience,

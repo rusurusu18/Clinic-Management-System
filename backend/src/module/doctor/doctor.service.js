@@ -11,7 +11,7 @@ import {
  * @param {object} doctorData
  * @param {object} files - req.files from uploadFields: { profilePicture: [], certificates: [] }
  */
-export const createDoctor = async (doctorData, files = {}) => {
+export const createDoctor = async (doctorData, files = {}, approvalStatus = 'PENDING') => {
   const { userId, department, ...data } = doctorData;
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -62,6 +62,7 @@ export const createDoctor = async (doctorData, files = {}) => {
       userId,
       departmentId,
       ...data,
+      approvalStatus,
       qualifications: data.qualifications || [],
       availableDays: data.availableDays || [],
       certificates: uploadedCertificates,
@@ -114,6 +115,7 @@ export const getAllDoctors = async (
   if (specialization) where.specialization = { contains: specialization };
   if (hospital) where.hospital = { contains: hospital };
   if (minRating) where.rating = { gte: minRating };
+  where.approvalStatus = 'APPROVED';
 
   const [doctors, total] = await Promise.all([
     prisma.doctor.findMany({
@@ -138,6 +140,49 @@ export const getAllDoctors = async (
   return { doctors, pagination: { page, limit, total, totalPages: Math.ceil(total / limit) } };
 };
 
+export const getDoctorApplications = async (status) => {
+  const where = status ? { approvalStatus: status } : {};
+  return prisma.doctor.findMany({
+    where,
+    include: {
+      user: {
+        select: { id: true, fullName: true, email: true, phone: true, avatar: true, createdAt: true },
+      },
+      department: { select: { id: true, name: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+};
+
+export const reviewDoctorApplication = async (doctorId, status, actorId) => {
+  const existing = await prisma.doctor.findUnique({ where: { id: doctorId } });
+  if (!existing) throw new Error('Doctor not found');
+
+  return prisma.$transaction(async (tx) => {
+    const doctor = await tx.doctor.update({
+      where: { id: doctorId },
+      data: { approvalStatus: status },
+      include: {
+        user: {
+          select: { id: true, fullName: true, email: true, phone: true, avatar: true, createdAt: true },
+        },
+        department: { select: { id: true, name: true } },
+      },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        userId: existing.userId,
+        action: `DOCTOR_${status}`,
+        resource: 'Doctor',
+        details: { doctorId, reviewedBy: actorId },
+      },
+    });
+
+    return doctor;
+  });
+};
+
 // ==================== GET DOCTOR BY ID ====================
 export const getDoctorById = async (doctorId) => {
   const doctor = await prisma.doctor.findUnique({
@@ -154,7 +199,7 @@ export const getDoctorById = async (doctorId) => {
     },
   });
 
-  if (!doctor) throw new Error('Doctor not found');
+  if (!doctor || doctor.approvalStatus !== 'APPROVED') throw new Error('Doctor not found');
   return doctor;
 };
 

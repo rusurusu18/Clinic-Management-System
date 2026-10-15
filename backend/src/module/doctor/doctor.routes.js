@@ -4,6 +4,7 @@ import {
   createDoctorSchema, 
   updateDoctorSchema,
   doctorOnboardingSchema,
+  doctorApprovalSchema,
   doctorIdSchema,
   rateDoctorSchema
 } from './doctor.schema.js';
@@ -21,6 +22,19 @@ router.get('/public/:id', doctorController.getDoctorById);
 
 // proctected routes
 router.use(verifyToken);
+
+router.get(
+  '/admin/applications',
+  authorize(ROLES.ADMIN),
+  doctorController.getDoctorApplications
+);
+
+router.patch(
+  '/admin/applications/:id/review',
+  authorize(ROLES.ADMIN),
+  validate(doctorApprovalSchema),
+  doctorController.reviewDoctorApplication
+);
 
 // ==================== DOCTOR ROUTES ====================
 

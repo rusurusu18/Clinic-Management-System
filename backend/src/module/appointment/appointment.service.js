@@ -26,7 +26,7 @@ export const bookAppointment = async (appointmentData) => {
         }
     });
 
-    if (!doctor) {
+    if (!doctor || doctor.approvalStatus !== "APPROVED") {
         throw new Error("Doctor not found");
     }
 

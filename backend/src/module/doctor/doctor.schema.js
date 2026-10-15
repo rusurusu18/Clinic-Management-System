@@ -45,6 +45,10 @@ export const createDoctorSchema = z.object({
 
 export const doctorOnboardingSchema = createDoctorSchema.omit({ userId: true });
 
+export const doctorApprovalSchema = z.object({
+  status: z.enum(['APPROVED', 'REJECTED']),
+});
+
 // Update Doctor Schema
 export const updateDoctorSchema = z.object({
   specialization: z.string().optional(),

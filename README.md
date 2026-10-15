@@ -62,6 +62,17 @@ It combines a public-facing clinic website with authenticated dashboards and bac
 
 AsterCare provides secure authentication and role-based authorization.
 
+### Admin sign-in and doctor approvals
+
+To create or refresh the administrator account from the credentials configured in `backend/.env`, run from the repository root:
+
+```powershell
+npm --prefix backend run migrate
+npm --prefix backend run seed
+```
+
+Set `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `backend/.env` before running the seed command. Then sign in at `/login` with that email and password; administrators are redirected to `/admin`. The **Doctors** section lists pending applications, where an administrator can inspect submitted credentials and certificates, then approve or reject each application. Only approved doctors appear in the public directory and can receive appointments.
+
 ### Authentication Features
 
 - Patient registration
