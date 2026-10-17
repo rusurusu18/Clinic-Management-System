@@ -20,6 +20,7 @@ import {
 import SectionCard from '../../../components/sections/SectionCard';
 import StatCard from '../../../components/sections/StatCard';
 
+// quick snapshot before opening a patient chart
 const recordKpis = [
   { label: 'Total records', value: 482, sub: 'All consultations', tone: 'primary' },
   { label: 'Active Rx', value: 186, sub: 'Prescriptions active', tone: 'emerald' },
@@ -62,6 +63,7 @@ const DoctorRecords = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [selected, setSelected] = useState(records[0]);
 
+  // the list, search box, and type chips stay in sync
   const filtered = records.filter((r) => {
     if (typeFilter !== 'All' && !r.type.includes(typeFilter) && !(typeFilter === 'Report' && r.reports > 0) && !(typeFilter === 'Rx' && r.prescriptions > 0)) return false;
     if (!search) return true;
@@ -116,7 +118,7 @@ const DoctorRecords = () => {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Records list */}
+        {/* click a row and the detail panel updates to match */}
         <SectionCard className="lg:col-span-2" title={`Medical records (${filtered.length})`} subtitle="Click to view full record" bodyClassName="p-0">
           {filtered.length === 0 ? (
             <div className="p-10 text-center text-sm text-slate-400">
@@ -205,7 +207,7 @@ const DoctorRecords = () => {
                 </div>
               </div>
 
-              {/* Prescriptions */}
+              {/* current med list for the selected patient */}
               <div className="p-5">
                 <div className="flex items-center justify-between">
                   <p className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5">
@@ -279,7 +281,7 @@ const DoctorRecords = () => {
         </SectionCard>
       </div>
 
-      {/* New record modal */}
+      {/* keep record creation separate so the table stays readable */}
       {createOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
           <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto animate-in fade-in zoom-in-95 rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900">

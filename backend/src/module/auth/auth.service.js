@@ -9,12 +9,15 @@ import { MESSAGES } from "../../constants/message.js";
 const { Prisma } = PrismaModule;
 
 // ==================== REGISTER USER ====================
+const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
+
 export const registerUser = async (userData) => {
     const { fullName, email, phone, password, role } = userData;
+    const normalizedEmail = normalizeEmail(email);
 
     // Check if email already exists
     const existingEmail = await prisma.user.findUnique({
-        where: { email }
+        where: { email: normalizedEmail }
     });
 
     if (existingEmail) {
@@ -38,7 +41,7 @@ export const registerUser = async (userData) => {
         const user = await tx.user.create({
             data: {
                 fullName,
-                email,
+                email: normalizedEmail,
                 phone,
                 password: hashedPassword,
                 role: normalizedRole,
@@ -143,8 +146,9 @@ const createAuthSession = async (user, userAgent, ipAddress, action = 'LOGIN') =
 
 // ==================== LOGIN USER ====================
 export const loginUser = async (email, password, userAgent, ipAddress) => {
+    const normalizedEmail = normalizeEmail(email);
     const user = await prisma.user.findUnique({
-        where: { email },
+        where: { email: normalizedEmail },
     });
 
     if (!user) {
@@ -165,7 +169,8 @@ export const loginUser = async (email, password, userAgent, ipAddress) => {
 
 // ==================== ADMIN LOGIN (OTP) ====================
 export const adminLogin = async (email, password, userAgent, ipAddress) => {
-    const user = await prisma.user.findUnique({ where: { email } });
+    const normalizedEmail = normalizeEmail(email);
+    const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
     if (!user) {
         throw new Error(MESSAGES.INVALID_CREDENTIALS || 'Invalid email or password');

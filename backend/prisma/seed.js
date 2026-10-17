@@ -2,10 +2,12 @@ import 'dotenv/config';
 import prisma from '../src/config/database.js';
 import { hashPassword } from '../src/utils/hash.js';
 
-const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@astercare.local').toLowerCase().trim();
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Admin@12345';
-const ADMIN_PHONE = process.env.ADMIN_PHONE || '+9779800000000';
-const ADMIN_NAME = process.env.ADMIN_NAME || 'System Administrator';
+const normalizeEnvValue = (value, fallback = '') => String(value ?? fallback).replace(/,$/, '').trim();
+
+const ADMIN_EMAIL = normalizeEnvValue(process.env.ADMIN_EMAIL || 'admin@astercare.local').toLowerCase();
+const ADMIN_PASSWORD = normalizeEnvValue(process.env.ADMIN_PASSWORD || 'Admin@12345');
+const ADMIN_PHONE = normalizeEnvValue(process.env.ADMIN_PHONE || '+9779800000000');
+const ADMIN_NAME = normalizeEnvValue(process.env.ADMIN_NAME || 'System Administrator');
 
 const DEPARTMENTS = [
   {
